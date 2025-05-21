@@ -44,7 +44,7 @@ defmodule Sportsbook.API.WebsocketClient do
 
     case validate_sport(sport) do
       {:ok, sport_code} ->
-        case {:ok, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1biI6InRiZWNoaXIiLCJuYmYiOjE3NDc3OTMzNjYsImV4cCI6MTc0Nzc5Njk2NiwiaWF0IjoxNzQ3NzkzMzY2fQ.YWA5tCEeobin1znyQlcFp4o1Sz7vcvKjK3xSeFDeQxs"} do #Sportsbook.API.TokenClient.get_current_token() do
+        case {:ok, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1biI6InRiZWNoaXIiLCJuYmYiOjE3NDc3OTk4ODksImV4cCI6MTc0NzgwMzQ4OSwiaWF0IjoxNzQ3Nzk5ODg5fQ.hK0XBhXPsM_PjfJ_L7nHX2TwbtM8jSmOmv-gn5-rQUQ"} do #Sportsbook.API.TokenClient.get_current_token() do
           {:ok, token_data} ->
             token = token_data#["token"]
             url = "#{@base_url}/#{sport_code}?tkn=#{token}"

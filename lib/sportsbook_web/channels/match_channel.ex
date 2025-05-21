@@ -4,13 +4,10 @@ defmodule SportsbookWeb.MatchChannel do
 
   @impl true
   def join("matches:" <> sport, _payload, socket) do
-    Logger.info("Client joined matches channel for sport: #{sport}")
+    Logger.info("Client joined matches channel for sport: #{sport} (deprecated - use individual match channels)")
     
-    # Subscribe to match updates for this sport
-    Phoenix.PubSub.subscribe(Sportsbook.PubSub, "match_updates")
-    
-    # Send self a message to push initial data after join
-    send(self(), {:after_join, sport})
+    # This channel is now deprecated - clients should use individual match:sport:id channels
+    # Keeping for backwards compatibility but not subscribing to updates
     
     {:ok, assign(socket, :sport, sport)}
   end
@@ -31,18 +28,7 @@ defmodule SportsbookWeb.MatchChannel do
 
   @impl true
   def handle_info({:after_join, sport}, socket) do
-    # Get all matches for this sport
-    matches = Sportsbook.Storage.MatchStore.get_sport_matches(sport)
-    
-    # Group matches by league
-    grouped_matches = group_matches_by_league(matches)
-    
-    # Send initial data
-    push(socket, "initial_matches", %{
-      sport: sport,
-      matches: grouped_matches
-    })
-    
+    # Deprecated - no longer used with individual match subscriptions
     {:noreply, socket}
   end
 
@@ -74,40 +60,13 @@ defmodule SportsbookWeb.MatchChannel do
 
   @impl true
   def handle_info({:match_updated, sport, match_id, small_data}, socket) do
-    # Only handle if this is for our sport
-    if socket.assigns[:sport] == sport do
-      # Get all matches for this sport and regroup
-      matches = Sportsbook.Storage.MatchStore.get_sport_matches(sport)
-      grouped_matches = group_matches_by_league(matches)
-      
-      push(socket, "matches_updated", %{
-        sport: sport,
-        matches: grouped_matches
-      })
-    end
-    
+    # Deprecated - no longer used with individual match subscriptions
     {:noreply, socket}
   end
 
   @impl true
   def handle_info({:match_removed, sport, match_id}, socket) do
-    # Only handle if this is for our sport
-    if socket.assigns[:sport] == sport do
-      push(socket, "match_removed", %{
-        sport: sport,
-        match_id: match_id
-      })
-      
-      # Get updated matches and regroup
-      matches = Sportsbook.Storage.MatchStore.get_sport_matches(sport)
-      grouped_matches = group_matches_by_league(matches)
-      
-      push(socket, "matches_updated", %{
-        sport: sport,
-        matches: grouped_matches
-      })
-    end
-    
+    # Deprecated - no longer used with individual match subscriptions  
     {:noreply, socket}
   end
 

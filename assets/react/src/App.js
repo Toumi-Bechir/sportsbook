@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Socket } from 'phoenix';
 import SportFilter from './components/SportFilter';
 import MatchesList from './components/MatchesList';
@@ -9,9 +9,11 @@ function App() {
   const [sports, setSports] = useState([]);
   const [matches, setMatches] = useState([]);
   const [socket, setSocket] = useState(null);
-  const [channel, setChannel] = useState(null);
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
   const [lastUpdate, setLastUpdate] = useState(new Date());
+  
+  // Keep track of active match subscriptions
+  const matchChannelsRef = useRef(new Map());
 
   // Initialize socket connection
   useEffect(() => {
@@ -57,81 +59,105 @@ function App() {
       });
   }, []);
 
-  // Handle sport selection changes
+  // Fetch initial matches when sport changes
   useEffect(() => {
-    if (!socket || !selectedSport) return;
+    if (!selectedSport) return;
 
-    // Leave previous channel if exists
-    if (channel) {
-      channel.leave();
-    }
-
-    // Join new sport channel
-    const newChannel = socket.channel(`matches:${selectedSport}`, {});
-
-    newChannel.join()
-      .receive('ok', resp => {
-        console.log(`Joined matches:${selectedSport} successfully`, resp);
+    console.log(`Fetching initial matches for ${selectedSport}`);
+    fetch(`/api/matches/${selectedSport}`)
+      .then(response => response.json())
+      .then(data => {
+        console.log(`Received initial matches for ${selectedSport}:`, data);
+        setMatches(data.matches || []);
+        setLastUpdate(new Date());
       })
-      .receive('error', resp => {
-        console.log(`Unable to join matches:${selectedSport}`, resp);
+      .catch(error => {
+        console.error('Error fetching matches:', error);
+        setMatches([]);
       });
+  }, [selectedSport]);
 
-    // Handle initial matches data
-    newChannel.on('initial_matches', payload => {
-      console.log('Received initial matches:', payload);
-      setMatches(payload.matches || []);
-      setLastUpdate(new Date());
+  // Subscribe to individual matches when matches change
+  useEffect(() => {
+    if (!socket || !selectedSport || matches.length === 0) return;
+
+    console.log(`Setting up match subscriptions for ${selectedSport}`);
+    
+    // Clean up existing subscriptions
+    matchChannelsRef.current.forEach((channel, matchId) => {
+      console.log(`Leaving subscription for match ${matchId}`);
+      channel.leave();
     });
+    matchChannelsRef.current.clear();
 
-    // Handle match updates
-    newChannel.on('matches_updated', payload => {
-      console.log('Matches updated:', payload);
-      setMatches(payload.matches || []);
-      setLastUpdate(new Date());
-    });
-
-    // Handle individual match removals
-    newChannel.on('match_removed', payload => {
-      console.log('Match removed:', payload);
-      setLastUpdate(new Date());
-    });
-
-    setChannel(newChannel);
-
-    // Subscribe to individual match updates for real-time data
+    // Subscribe to each match
     matches.forEach(league => {
       league.matches.forEach(match => {
-        const matchChannel = socket.channel(`match:${selectedSport}:${match.id}`, {});
-        
-        matchChannel.join()
-          .receive('ok', () => {
-            console.log(`Subscribed to match ${match.id}`);
-          });
-
-        matchChannel.on('match_update', payload => {
-          console.log(`Match ${match.id} updated:`, payload);
-          // Update specific match in the matches array
-          setMatches(prevMatches => 
-            prevMatches.map(league => ({
-              ...league,
-              matches: league.matches.map(m => 
-                m.id === match.id ? { ...m, data: payload.data } : m
-              )
-            }))
-          );
-          setLastUpdate(new Date());
-        });
+        subscribeToMatch(match.id);
       });
     });
 
-    // Cleanup
+    // Cleanup function
     return () => {
-      if (newChannel) {
-        newChannel.leave();
-      }
+      matchChannelsRef.current.forEach((channel, matchId) => {
+        console.log(`Cleaning up subscription for match ${matchId}`);
+        channel.leave();
+      });
+      matchChannelsRef.current.clear();
     };
-  }, [socket, selectedSport]);
+  }, [socket, selectedSport, matches.length]); // Only re-run when matches count changes
+
+  const subscribeToMatch = (matchId) => {
+    if (matchChannelsRef.current.has(matchId)) {
+      return; // Already subscribed
+    }
+
+    const channelTopic = `match:${selectedSport}:${matchId}`;
+    console.log(`Subscribing to ${channelTopic}`);
+    
+    const matchChannel = socket.channel(channelTopic, {});
+    
+    matchChannel.join()
+      .receive('ok', () => {
+        console.log(`✅ Successfully subscribed to match ${matchId}`);
+      })
+      .receive('error', resp => {
+        console.log(`❌ Failed to subscribe to match ${matchId}:`, resp);
+      });
+
+    // Handle individual match updates
+    matchChannel.on('match_update', payload => {
+      console.log(`🔄 Match ${matchId} updated:`, payload);
+      updateSpecificMatch(matchId, payload.data);
+    });
+
+    // Store the channel reference
+    matchChannelsRef.current.set(matchId, matchChannel);
+  };
+
+  // Efficient function to update only a specific match
+  const updateSpecificMatch = (matchId, newData) => {
+    setMatches(prevMatches => {
+      return prevMatches.map(league => {
+        const matchIndex = league.matches.findIndex(m => m.id === matchId);
+        if (matchIndex === -1) return league; // Match not in this league
+        
+        // Create new matches array with updated match
+        const updatedMatches = [...league.matches];
+        updatedMatches[matchIndex] = {
+          ...updatedMatches[matchIndex],
+          data: newData
+        };
+        
+        return {
+          ...league,
+          matches: updatedMatches
+        };
+      });
+    });
+    
+    setLastUpdate(new Date());
+  };
 
   const formatTime = (seconds) => {
     if (!seconds) return '00:00';
@@ -159,6 +185,9 @@ function App() {
               style={{ color: getConnectionStatusColor() }}
             >
               ● {connectionStatus}
+            </div>
+            <div className="subscriptions-count">
+              📡 {matchChannelsRef.current.size} active subscriptions
             </div>
             <div className="last-update">
               Last update: {lastUpdate.toLocaleTimeString()}
