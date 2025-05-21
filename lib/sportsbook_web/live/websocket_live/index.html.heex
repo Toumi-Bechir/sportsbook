@@ -1,0 +1,72 @@
+<.header class="mb-8">
+  Goalserve Websocket Feed
+  <:subtitle>
+    Real-time sports data from Goalserve
+  </:subtitle>
+  <:actions>
+    <.button phx-click="refresh-token">Refresh Token</.button>
+  </:actions>
+</.header>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <div class="border rounded p-4 bg-gray-50">
+    <h2 class="font-bold text-lg mb-2">API Token</h2>
+    <%= if @token do %>
+      <div class="text-xs">
+        <strong>Token:</strong> <%= @token["token"] %>
+        <br/><br/>
+        <strong>Expiry:</strong> <%= @token["expiry"] %>
+      </div>
+    <% else %>
+      <div class="text-red-500">No token available</div>
+    <% end %>
+  </div>
+  
+  <div class="border rounded p-4 bg-gray-50">
+    <h2 class="font-bold text-lg mb-2">Active Connections</h2>
+    <ul class="mb-4">
+      <%= for {_id, sport} <- @active_connections do %>
+        <li class="py-1">
+          <%= sport %> <.button class="py-0 px-2 text-xs" phx-click="toggle-connection" phx-value-sport={sport}>Disconnect</.button>
+        </li>
+      <% end %>
+    </ul>
+    
+    <h3 class="font-semibold text-md mt-4 mb-1">Connect to Sport</h3>
+    <div class="flex flex-wrap gap-2">
+      <%= for sport <- [:soccer, :basket, :tennis, :baseball, :amfootball, :hockey, :volleyball] do %>
+        <%= unless Enum.any?(@active_connections, fn {_id, s} -> s == sport end) do %>
+          <.button class="py-1 px-2 text-xs" phx-click="toggle-connection" phx-value-sport={sport}><%= sport %></.button>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+  
+  <div class="border rounded p-4 bg-gray-50">
+    <h2 class="font-bold text-lg mb-2">View Feed</h2>
+    <p class="mb-2">Currently viewing: <strong><%= @current_sport %></strong></p>
+    
+    <h3 class="font-semibold text-md mt-4 mb-1">Change Sport</h3>
+    <div class="flex flex-wrap gap-2">
+      <%= for sport <- [:soccer, :basket, :tennis, :baseball, :amfootball, :hockey, :volleyball] do %>
+        <.button class="py-1 px-2 text-xs" phx-click="change-sport" phx-value-sport={sport}><%= sport %></.button>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<div class="mt-8 border rounded p-4 bg-gray-50">
+  <h2 class="font-bold text-lg mb-2">Events (<%= @current_sport %>)</h2>
+  
+  <div class="bg-black text-green-400 font-mono text-xs p-4 h-96 overflow-y-auto">
+    <%= if Enum.empty?(@events) do %>
+      <p>No events received yet...</p>
+    <% else %>
+      <%= for event <- @events do %>
+        <div class="mb-2 border-b border-gray-700 pb-2">
+          <pre><%= Jason.encode!(event, pretty: true) %></pre>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</div>

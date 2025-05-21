@@ -1,0 +1,40 @@
+<header class="px-4 sm:px-6 lg:px-8">
+  <div class="flex items-center justify-between border-b border-zinc-100 py-3">
+    <div class="flex items-center gap-4">
+      <a href="/">
+        <img src={~p"/images/logo.svg"} width="36" />
+      </a>
+      <span class="text-lg font-bold">Sportsbook</span>
+      <p class="bg-brand/5 text-brand rounded-full px-2 font-medium leading-6 text-sm">
+        LiveView Demo
+      </p>
+    </div>
+    <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
+      <.link navigate={~p"/"} class="hover:text-zinc-700">Home</.link>
+      <.link navigate={~p"/events"} class="hover:text-zinc-700">Events</.link>
+      <.link navigate={~p"/matches"} class="hover:text-zinc-700">Match Data</.link>
+      <.link navigate={~p"/websocket"} class="hover:text-zinc-700">Websocket</.link>
+      <.link navigate={~p"/admin/tables"} class="hover:text-zinc-700">
+        <span class="text-indigo-500">ETS Tables</span>
+      </.link>
+      <.link 
+        navigate={~p"/api/token"} 
+        class="rounded-lg bg-zinc-100 px-2 py-1 hover:bg-zinc-200/80"
+      >
+        API Token <span aria-hidden="true">&rarr;</span>
+      </.link>
+    </div>
+  </div>
+</header>
+<main class="px-4 py-10 sm:px-6 lg:px-8">
+  <div class="mx-auto max-w-7xl">
+    <.flash_group flash={@flash} />
+    {@inner_content}
+  </div>
+</main>
+
+<footer class="bg-white border-t border-zinc-100 mt-10">
+  <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 text-center text-sm text-zinc-500">
+    <p>&copy; 2025 Sportsbook - LiveView Streaming Data Demo</p>
+  </div>
+</footer>

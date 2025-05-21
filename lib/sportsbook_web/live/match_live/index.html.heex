@@ -1,0 +1,302 @@
+<.header class="mb-8">
+  <div class="flex justify-between items-center">
+    <div>
+      <h1 class="text-2xl font-bold">Live Match Data</h1>
+      <p class="text-sm text-gray-500">Last updated: <%= Calendar.strftime(@last_update, "%H:%M:%S") %></p>
+    </div>
+    <.button phx-click="refresh" class="bg-indigo-600">
+      <.icon name="hero-arrow-path" class="h-4 w-4 mr-1" /> Refresh
+    </.button>
+  </div>
+</.header>
+
+<div class="mb-6">
+  <div class="border-b border-gray-200">
+    <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+      <.link
+        patch={~p"/matches"}
+        class={[
+          "py-3 px-1 border-b-2 font-medium text-sm",
+          @selected_tab == "overview" && "border-indigo-500 text-indigo-600",
+          @selected_tab != "overview" && "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+        ]}
+      >
+        Overview
+      </.link>
+      
+      <.link
+        patch={~p"/matches/available"}
+        class={[
+          "py-3 px-1 border-b-2 font-medium text-sm",
+          @selected_tab == "available" && "border-indigo-500 text-indigo-600",
+          @selected_tab != "available" && "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+        ]}
+      >
+        Available Matches
+      </.link>
+      
+      <%= for sport <- @sports do %>
+        <.link
+          patch={~p"/matches/#{sport}"}
+          class={[
+            "py-3 px-1 border-b-2 font-medium text-sm",
+            @selected_tab == sport && "border-indigo-500 text-indigo-600",
+            @selected_tab != sport && "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+          ]}
+        >
+          <%= String.capitalize(sport) %>
+        </.link>
+      <% end %>
+    </nav>
+  </div>
+</div>
+
+<div class="mt-6">
+  <%= case @selected_tab do %>
+    <% "overview" -> %>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <%= for sport <- ["soccer", "basket", "tennis", "baseball", "amfootball", "hockey", "volleyball"] do %>
+          <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-bold mb-4 flex items-center justify-between">
+              <%= String.capitalize(sport) %>
+              <span class="text-sm font-normal bg-gray-100 rounded-full px-3 py-1">
+                <%= length(Map.get(@matches_by_sport, sport, [])) %> matches
+              </span>
+            </h2>
+            
+            <%= if Enum.empty?(Map.get(@matches_by_sport, sport, [])) do %>
+              <p class="text-gray-500 italic">No active matches</p>
+            <% else %>
+              <div class="space-y-3 max-h-80 overflow-y-auto">
+                <%= for {match_id, small_data, _} <- Enum.take(Map.get(@matches_by_sport, sport, []), 5) do %>
+                  <div class="border rounded p-3 bg-gray-50">
+                    <div class="flex justify-between items-center">
+                      <div>
+                        <p class="font-semibold"><%= small_data["t1"]["name"] %> vs <%= small_data["t2"]["name"] %></p>
+                        <p class="text-xs text-gray-500">
+                          <span class="font-medium"><%= get_period(small_data["period"], sport) %></span> - 
+                          <span><%= format_time(small_data["time"]) %></span>
+                        </p>
+                      </div>
+                      <div class="text-lg font-bold"><%= get_score(small_data, sport) %></div>
+                    </div>
+                  </div>
+                <% end %>
+                
+                <%= if length(Map.get(@matches_by_sport, sport, [])) > 5 do %>
+                  <div class="text-center">
+                    <button 
+                      phx-click="select-tab" 
+                      phx-value-tab={sport}
+                      class="text-indigo-600 text-sm font-medium hover:underline"
+                    >
+                      Show <%= length(Map.get(@matches_by_sport, sport, [])) - 5 %> more matches
+                    </button>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    
+    <% "available" -> %>
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-bold mb-4">Available Matches by Sport</h2>
+        
+        <%= if Enum.empty?(@available_matches) do %>
+          <p class="text-gray-500 italic">No available matches data</p>
+        <% else %>
+          <div class="space-y-6">
+            <%= for {sport, avl_frame} <- @available_matches do %>
+              <div class="border-t pt-4">
+                <h3 class="text-lg font-semibold mb-2 flex items-center justify-between">
+                  <%= String.capitalize(sport) %>
+                  <span class="text-sm font-normal bg-gray-100 rounded-full px-3 py-1">
+                    <%= if avl_frame["matches"], do: length(avl_frame["matches"]), else: 0 %> matches
+                  </span>
+                </h3>
+                
+                <%= if avl_frame["matches"] && length(avl_frame["matches"]) > 0 do %>
+                  <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                      <thead class="bg-gray-50">
+                        <tr>
+                          <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                          <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teams</th>
+                          <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">League</th>
+                          <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                        </tr>
+                      </thead>
+                      <tbody class="bg-white divide-y divide-gray-200">
+                        <%= for match <- Enum.take(avl_frame["matches"], 10) do %>
+                          <tr>
+                            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500"><%= match["id"] %></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                              <%= match["t1"]["n"] %> vs <%= match["t2"]["n"] %>
+                            </td>
+                            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500"><%= match["league"] %></td>
+                            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500"><%= match["time"] %></td>
+                          </tr>
+                        <% end %>
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  <%= if avl_frame["matches"] && length(avl_frame["matches"]) > 10 do %>
+                    <div class="mt-2 text-center">
+                      <p class="text-gray-500 text-sm">Showing 10 of <%= length(avl_frame["matches"]) %> matches</p>
+                    </div>
+                  <% end %>
+                <% else %>
+                  <p class="text-gray-500 italic">No available matches</p>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    
+    <% sport when sport in ["soccer", "basket", "tennis", "baseball", "amfootball", "hockey", "volleyball"] -> %>
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-bold mb-4 flex items-center justify-between">
+          <%= String.capitalize(sport) %> Matches
+          <span class="text-sm font-normal bg-gray-100 rounded-full px-3 py-1">
+            <%= length(Map.get(@matches_by_sport, sport, [])) %> active matches
+          </span>
+        </h2>
+        
+        <%= if Enum.empty?(Map.get(@matches_by_sport, sport, [])) do %>
+          <p class="text-gray-500 italic">No active matches</p>
+        <% else %>
+          <div class="space-y-6">
+            <%= for {match_id, small_data, full_data} <- Map.get(@matches_by_sport, sport, []) do %>
+              <div class="border rounded-lg overflow-hidden">
+                <div class="bg-gray-50 p-4 flex justify-between items-center border-b">
+                  <div>
+                    <h3 class="font-bold text-lg">
+                      <%= small_data["t1"]["name"] %> vs <%= small_data["t2"]["name"] %>
+                    </h3>
+                    <p class="text-sm text-gray-500">
+                      ID: <%= match_id %> | 
+                      <%= get_period(small_data["period"], sport) %> - 
+                      <%= format_time(small_data["time"]) %>
+                    </p>
+                  </div>
+                  <div class="text-2xl font-bold"><%= get_score(small_data, sport) %></div>
+                </div>
+                
+                <div class="p-4">
+                  <h4 class="font-semibold mb-2">Match Details</h4>
+                  
+                  <%= case sport do %>
+                    <% "soccer" -> %>
+                      <div class="grid grid-cols-2 gap-4">
+                        <div>
+                          <p class="text-sm"><strong>Teams:</strong> <%= small_data["t1"]["name"] %> vs <%= small_data["t2"]["name"] %></p>
+                          <p class="text-sm"><strong>Score:</strong> <%= small_data["t1"]["score"] %>-<%= small_data["t2"]["score"] %></p>
+                          <p class="text-sm"><strong>Period:</strong> <%= get_period(small_data["period"], sport) %></p>
+                          <p class="text-sm"><strong>Time:</strong> <%= format_time(small_data["time"]) %></p>
+                          <p class="text-sm"><strong>Ball Position:</strong> <%= small_data["xy"] || "N/A" %></p>
+                        </div>
+                        <div>
+                          <p class="text-sm"><strong>Updated:</strong> <%= small_data["updated_at"] %></p>
+                          <%= if full_data["stats"] do %>
+                            <p class="text-sm"><strong>Corners:</strong> <%= (full_data["stats"]["c"] || [0, 0]) |> Enum.join("-") %></p>
+                            <p class="text-sm"><strong>Yellow Cards:</strong> <%= (full_data["stats"]["y"] || [0, 0]) |> Enum.join("-") %></p>
+                            <p class="text-sm"><strong>Red Cards:</strong> <%= (full_data["stats"]["r"] || [0, 0]) |> Enum.join("-") %></p>
+                          <% end %>
+                        </div>
+                      </div>
+                    
+                    <% "basket" -> %>
+                      <div class="grid grid-cols-2 gap-4">
+                        <div>
+                          <p class="text-sm"><strong>Teams:</strong> <%= small_data["t1"]["name"] %> vs <%= small_data["t2"]["name"] %></p>
+                          <p class="text-sm"><strong>Score:</strong> <%= small_data["t1"]["score"] %>-<%= small_data["t2"]["score"] %></p>
+                          <p class="text-sm"><strong>Period:</strong> <%= get_period(small_data["period"], sport) %></p>
+                          <p class="text-sm"><strong>Time:</strong> <%= format_time(small_data["time"]) %></p>
+                        </div>
+                        <div>
+                          <p class="text-sm"><strong>Updated:</strong> <%= small_data["updated_at"] %></p>
+                          <%= if small_data["quarter_scores"] do %>
+                            <p class="text-sm"><strong>Q1:</strong> <%= (small_data["quarter_scores"]["Q1"] || [0, 0]) |> Enum.join("-") %></p>
+                            <p class="text-sm"><strong>Q2:</strong> <%= (small_data["quarter_scores"]["Q2"] || [0, 0]) |> Enum.join("-") %></p>
+                            <p class="text-sm"><strong>Q3:</strong> <%= (small_data["quarter_scores"]["Q3"] || [0, 0]) |> Enum.join("-") %></p>
+                            <p class="text-sm"><strong>Q4:</strong> <%= (small_data["quarter_scores"]["Q4"] || [0, 0]) |> Enum.join("-") %></p>
+                          <% end %>
+                        </div>
+                      </div>
+                    
+                    <% "tennis" -> %>
+                      <div class="grid grid-cols-2 gap-4">
+                        <div>
+                          <p class="text-sm"><strong>Players:</strong> <%= small_data["t1"]["name"] %> vs <%= small_data["t2"]["name"] %></p>
+                          <p class="text-sm"><strong>Set:</strong> <%= get_period(small_data["period"], sport) %></p>
+                          <p class="text-sm"><strong>Time:</strong> <%= format_time(small_data["time"]) %></p>
+                        </div>
+                        <div>
+                          <p class="text-sm"><strong>Updated:</strong> <%= small_data["updated_at"] %></p>
+                          <p class="text-sm"><strong>Current Server:</strong> <%= inspect(small_data["current_server"]) %></p>
+                        </div>
+                      </div>
+                      
+                      <%= if full_data["t1"]["s"] && full_data["t2"]["s"] do %>
+                        <div class="mt-3">
+                          <h4 class="font-semibold mb-2">Sets</h4>
+                          <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                              <tr>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Set</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><%= small_data["t1"]["name"] %></th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><%= small_data["t2"]["name"] %></th>
+                              </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                              <%= for {set1, index} <- Enum.with_index(full_data["t1"]["s"]) do %>
+                                <tr>
+                                  <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">Set <%= index + 1 %></td>
+                                  <td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900"><%= set1["S"] %></td>
+                                  <td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900"><%= Enum.at(full_data["t2"]["s"], index)["S"] %></td>
+                                </tr>
+                              <% end %>
+                            </tbody>
+                          </table>
+                        </div>
+                      <% end %>
+                    
+                    <% _ -> %>
+                      <div class="grid grid-cols-2 gap-4">
+                        <div>
+                          <p class="text-sm"><strong>Teams/Players:</strong> <%= small_data["t1"]["name"] %> vs <%= small_data["t2"]["name"] %></p>
+                          <p class="text-sm"><strong>Period:</strong> <%= get_period(small_data["period"], sport) %></p>
+                          <p class="text-sm"><strong>Time:</strong> <%= format_time(small_data["time"]) %></p>
+                        </div>
+                        <div>
+                          <p class="text-sm"><strong>Updated:</strong> <%= small_data["updated_at"] %></p>
+                          <p class="text-sm"><strong>Current Situation:</strong> <%= inspect(small_data["current"]) %></p>
+                        </div>
+                      </div>
+                  <% end %>
+                </div>
+                
+                <div class="border-t p-4 bg-gray-50">
+                  <details class="text-sm">
+                    <summary class="cursor-pointer font-medium text-indigo-600">View raw frame data</summary>
+                    <pre class="mt-2 text-xs overflow-auto max-h-96 bg-gray-800 text-white p-3 rounded">
+                      <%= Jason.encode!(full_data, pretty: true) %>
+                    </pre>
+                  </details>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    
+    <% _ -> %>
+      <div class="bg-white rounded-lg shadow p-6">
+        <p class="text-gray-500 italic">Select a tab above to view match data</p>
+      </div>
+  <% end %>
+</div>

@@ -1,0 +1,27 @@
+<.flash_group flash={@flash} />
+<div class="px-4 py-10 sm:px-6 sm:py-28 lg:px-8 xl:px-28 xl:py-32">
+  <div class="mx-auto max-w-xl lg:mx-0">
+    <h1 class="text-brand mt-10 flex items-center text-sm font-semibold leading-6">
+      Sportsbook API
+      <small class="bg-brand/5 text-[0.8125rem] ml-3 rounded-full px-2 font-medium leading-6">
+        v1
+      </small>
+    </h1>
+    <p class="text-[2rem] mt-4 font-semibold leading-10 tracking-tighter text-zinc-900">
+      API Token Information
+    </p>
+    <div class="mt-10 grid grid-cols-1 gap-y-8 gap-x-6">
+      <div class="p-6 bg-zinc-50 rounded-lg">
+        <pre class="whitespace-pre-wrap"><%= @response %></pre>
+      </div>
+      <div>
+        <.link
+          href={~p"/"}
+          class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
+        >
+          Back to Home <span aria-hidden="true">&rarr;</span>
+        </.link>
+      </div>
+    </div>
+  </div>
+</div>

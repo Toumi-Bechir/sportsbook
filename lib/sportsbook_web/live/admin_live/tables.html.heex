@@ -1,0 +1,220 @@
+<.header class="mb-6">
+  <div class="flex justify-between items-center">
+    <div>
+      <h1 class="text-2xl font-bold">ETS Tables Inspector</h1>
+      <p class="text-sm text-gray-500">Last updated: <%= Calendar.strftime(@last_update, "%H:%M:%S") %></p>
+    </div>
+    <div class="flex gap-2">
+      <.button phx-click={:refresh_data} class="bg-indigo-600">
+        <.icon name="hero-arrow-path" class="h-4 w-4 mr-1" /> Refresh
+      </.button>
+    </div>
+  </div>
+</.header>
+
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
+  <!-- Left sidebar - table list -->
+  <div class="lg:col-span-3">
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+      <div class="p-4 border-b bg-gray-50">
+        <h2 class="font-semibold">ETS Tables</h2>
+      </div>
+      
+      <div class="p-3 space-y-1">
+        <.form :let={f} for={%{}} as={:search} phx-change="search" class="mb-4">
+          <div class="relative rounded-md shadow-sm">
+            <.input field={f[:term]} value={@search_term} placeholder="Search tables..." />
+          </div>
+        </.form>
+        
+        <div class="font-medium text-sm text-gray-500 px-2 py-1">Available Matches</div>
+        <.link
+          patch={~p"/admin/tables/available_matches"}
+          class={[
+            "block px-3 py-2 rounded-md text-sm",
+            @selected_table == "available_matches" && "bg-indigo-50 text-indigo-700 font-medium",
+            @selected_table != "available_matches" && "hover:bg-gray-50"
+          ]}
+        >
+          <div class="flex justify-between items-center">
+            <span>available_matches</span>
+            <span class="text-xs bg-gray-100 px-2 py-0.5 rounded-full">
+              <%= table_size(:available_matches) %>
+            </span>
+          </div>
+        </.link>
+        
+        <div class="font-medium text-sm text-gray-500 px-2 py-1 mt-3">Sport Tables</div>
+        
+        <%= for {sport, table_name, _entries} <- @tables_data.sport_tables do %>
+          <.link
+            patch={~p"/admin/tables/#{table_name}"}
+            class={[
+              "block px-3 py-2 rounded-md text-sm",
+              @selected_table == to_string(table_name) && "bg-indigo-50 text-indigo-700 font-medium",
+              @selected_table != to_string(table_name) && "hover:bg-gray-50"
+            ]}
+          >
+            <div class="flex justify-between items-center">
+              <span><%= table_name %></span>
+              <span class="text-xs bg-gray-100 px-2 py-0.5 rounded-full">
+                <%= table_size(table_name) %>
+              </span>
+            </div>
+          </.link>
+        <% end %>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Main content area -->
+  <div class="lg:col-span-9">
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+      <%= case @selected_table do %>
+        <% "available_matches" -> %>
+          <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
+            <h2 class="font-semibold">Available Matches Table</h2>
+            <span class="text-xs bg-gray-200 px-2 py-1 rounded-full">
+              <%= length(@tables_data.available_matches) %> entries
+            </span>
+          </div>
+          
+          <div class="p-4">
+            <%= if Enum.empty?(@tables_data.available_matches) do %>
+              <p class="text-gray-500 italic">No entries in this table</p>
+            <% else %>
+              <div class="space-y-4">
+                <%= for {sport, avl_frame} <- filter_entries(@tables_data.available_matches, @search_term) do %>
+                  <div class="border rounded-lg overflow-hidden">
+                    <div class="bg-gray-50 p-3 border-b">
+                      <h3 class="font-medium">Sport: <%= sport %></h3>
+                    </div>
+                    <div class="p-3">
+                      <p class="mb-1">
+                        <span class="font-medium">Match Type:</span> <%= avl_frame["mt"] || "N/A" %>
+                      </p>
+                      <p class="mb-1">
+                        <span class="font-medium">Match Count:</span> 
+                        <%= if avl_frame["matches"], do: length(avl_frame["matches"]), else: 0 %>
+                      </p>
+                      
+                      <details class="mt-2">
+                        <summary class="cursor-pointer text-indigo-600 text-sm">View raw data</summary>
+                        <pre class="mt-2 text-xs overflow-auto max-h-96 bg-gray-800 text-white p-3 rounded"><%= Jason.encode!(avl_frame, pretty: true) %></pre>
+                      </details>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+          
+        <% nil -> %>
+          <div class="p-4 border-b bg-gray-50">
+            <h2 class="font-semibold">Select a table from the sidebar</h2>
+          </div>
+          <div class="p-4">
+            <p class="text-gray-500">Please select a table from the list on the left to view its contents.</p>
+            <p class="text-gray-500 mt-2">This inspector allows you to see the raw data stored in the ETS tables used by the application.</p>
+          </div>
+          
+        <% table_name -> %>
+          <% {sport, _, entries} = Enum.find(@tables_data.sport_tables, {nil, nil, []}, fn {_, name, _} -> 
+            to_string(name) == table_name 
+          end) %>
+          
+          <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
+            <h2 class="font-semibold"><%= table_name %> Table</h2>
+            <span class="text-xs bg-gray-200 px-2 py-1 rounded-full">
+              <%= length(entries) %> matches
+            </span>
+          </div>
+          
+          <div class="p-4">
+            <%= if Enum.empty?(entries) do %>
+              <p class="text-gray-500 italic">No entries in this table</p>
+            <% else %>
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Match ID</th>
+                      <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teams</th>
+                      <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                      <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                      <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Updated</th>
+                      <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200">
+                    <%= for entry <- filter_entries(entries, @search_term) do %>
+                      <tr>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500"><%= format_match_id(entry) %></td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900"><%= format_team_names(entry) %></td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 font-medium"><%= format_score(entry) %></td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
+                          <%= if is_tuple(entry) and tuple_size(entry) >= 2 do
+                            {_, small_data, _} = entry
+                            format_time(small_data["time"])
+                          else
+                            "N/A"
+                          end %>
+                        </td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500"><%= format_update_time(entry) %></td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm">
+                          <details>
+                            <summary class="cursor-pointer text-indigo-600">View data</summary>
+                            <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" 
+                                 onclick="this.parentElement.removeAttribute('open')" 
+                                 style="display: block;">
+                              <div class="bg-white rounded-lg max-w-4xl max-h-screen overflow-auto m-4 p-4" 
+                                   onclick="event.stopPropagation()">
+                                <div class="flex justify-between items-center mb-4">
+                                  <h3 class="text-lg font-medium">Match Data</h3>
+                                  <button type="button" 
+                                          class="text-gray-400 hover:text-gray-500"
+                                          onclick="this.closest('details').removeAttribute('open')">
+                                    <span class="sr-only">Close</span>
+                                    <.icon name="hero-x-mark" class="h-6 w-6" />
+                                  </button>
+                                </div>
+                                
+                                <div class="space-y-4">
+                                  <%= if is_tuple(entry) and tuple_size(entry) >= 3 do %>
+                                    <% {match_id, small_data, full_data} = entry %>
+                                    
+                                    <div>
+                                      <h4 class="font-medium mb-2">Match ID</h4>
+                                      <div class="bg-gray-100 p-3 rounded text-sm"><%= match_id %></div>
+                                    </div>
+                                    
+                                    <div>
+                                      <h4 class="font-medium mb-2">Small Data (Quick Access)</h4>
+                                      <pre class="bg-gray-100 p-3 rounded text-xs overflow-auto max-h-40"><%= Jason.encode!(small_data, pretty: true) %></pre>
+                                    </div>
+                                    
+                                    <div>
+                                      <h4 class="font-medium mb-2">Full Data</h4>
+                                      <pre class="bg-gray-100 p-3 rounded text-xs overflow-auto max-h-96"><%= Jason.encode!(full_data, pretty: true) %></pre>
+                                    </div>
+                                  <% else %>
+                                    <div class="bg-gray-100 p-3 rounded">
+                                      <pre><%= inspect(entry, pretty: true, limit: :infinity) %></pre>
+                                    </div>
+                                  <% end %>
+                                </div>
+                              </div>
+                            </div>
+                          </details>
+                        </td>
+                      </tr>
+                    <% end %>
+                  </tbody>
+                </table>
+              </div>
+            <% end %>
+          </div>
+      <% end %>
+    </div>
+  </div>
+</div>
