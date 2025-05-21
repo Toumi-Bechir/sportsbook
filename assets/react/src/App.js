@@ -12,8 +12,13 @@ function App() {
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
   const [lastUpdate, setLastUpdate] = useState(new Date());
   
+  // Match expansion state
+  const [expandedMatch, setExpandedMatch] = useState(null);
+  const [fullMatchData, setFullMatchData] = useState({});
+  
   // Keep track of active match subscriptions
   const matchChannelsRef = useRef(new Map());
+  const detailChannelRef = useRef(null);
 
   // Initialize socket connection
   useEffect(() => {
@@ -107,6 +112,55 @@ function App() {
     };
   }, [socket, selectedSport, matches.length]); // Only re-run when matches count changes
 
+  // Handle expanded match detail subscription
+  useEffect(() => {
+    if (!socket || !expandedMatch || !selectedSport) {
+      // Clean up detail channel if no expanded match
+      if (detailChannelRef.current) {
+        detailChannelRef.current.leave();
+        detailChannelRef.current = null;
+      }
+      return;
+    }
+
+    console.log(`Setting up detail subscription for match ${expandedMatch}`);
+    
+    // Clean up existing detail channel
+    if (detailChannelRef.current) {
+      detailChannelRef.current.leave();
+    }
+
+    // Subscribe to detailed match updates
+    const detailChannel = socket.channel(`match_details:${selectedSport}:${expandedMatch}`, {});
+    
+    detailChannel.join()
+      .receive('ok', () => {
+        console.log(`✅ Successfully subscribed to detailed updates for match ${expandedMatch}`);
+      })
+      .receive('error', resp => {
+        console.log(`❌ Failed to subscribe to detailed updates for match ${expandedMatch}:`, resp);
+      });
+
+    // Handle full match data updates
+    detailChannel.on('full_match_data', payload => {
+      console.log(`🔄 Full match data for ${expandedMatch}:`, payload);
+      setFullMatchData(prev => ({
+        ...prev,
+        [expandedMatch]: payload.data
+      }));
+      setLastUpdate(new Date());
+    });
+
+    detailChannelRef.current = detailChannel;
+
+    // Cleanup when expandedMatch changes
+    return () => {
+      if (detailChannel) {
+        detailChannel.leave();
+      }
+    };
+  }, [socket, expandedMatch, selectedSport]);
+
   const subscribeToMatch = (matchId) => {
     if (matchChannelsRef.current.has(matchId)) {
       return; // Already subscribed
@@ -159,6 +213,24 @@ function App() {
     setLastUpdate(new Date());
   };
 
+  // Handle match toggle
+  const handleToggleMatch = (matchId) => {
+    if (expandedMatch === matchId) {
+      // Close currently expanded match
+      setExpandedMatch(null);
+      setFullMatchData(prev => {
+        const newData = { ...prev };
+        delete newData[matchId];
+        return newData;
+      });
+    } else {
+      // Open new match (close others automatically)
+      setExpandedMatch(matchId);
+      // Clear previous match data
+      setFullMatchData({});
+    }
+  };
+
   const formatTime = (seconds) => {
     if (!seconds) return '00:00';
     const minutes = Math.floor(seconds / 60);
@@ -187,8 +259,13 @@ function App() {
               ● {connectionStatus}
             </div>
             <div className="subscriptions-count">
-              📡 {matchChannelsRef.current.size} active subscriptions
+              📡 {matchChannelsRef.current.size} match subscriptions
             </div>
+            {expandedMatch && (
+              <div className="detail-subscription">
+                🔍 Details: {expandedMatch}
+              </div>
+            )}
             <div className="last-update">
               Last update: {lastUpdate.toLocaleTimeString()}
             </div>
@@ -208,6 +285,9 @@ function App() {
             sport={selectedSport}
             matches={matches}
             formatTime={formatTime}
+            expandedMatch={expandedMatch}
+            onToggleMatch={handleToggleMatch}
+            fullMatchData={fullMatchData}
           />
         </div>
       </main>

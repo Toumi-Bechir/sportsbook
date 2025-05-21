@@ -149,6 +149,15 @@ defmodule Sportsbook.Storage.MatchStore do
       "#{sport}:#{match_id}",
       {:match_data, small_data}
     )
+    
+    # Broadcast full match data to details topic (only if there are subscribers)
+    # Always broadcast - Phoenix PubSub is efficient with no subscribers
+    details_topic = "#{sport}:#{match_id}:details"
+    Phoenix.PubSub.broadcast(
+      Sportsbook.PubSub,
+      details_topic,
+      {:match_details_data, updt_frame}
+    )
   end
   
   @doc """

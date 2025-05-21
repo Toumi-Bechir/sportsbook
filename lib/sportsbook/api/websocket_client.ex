@@ -123,7 +123,7 @@ defmodule Sportsbook.API.WebsocketClient do
   def handle_frame({:text, msg}, state) do
     case Jason.decode(msg) do
       {:ok, parsed} ->
-        Logger.debug("Received message from #{state.sport} websocket: #{inspect(parsed)}")
+        #Logger.debug("Received message from #{state.sport} websocket: #{inspect(parsed)}")
         process_message(parsed, state.sport)
 
       {:error, _} ->

@@ -10,6 +10,7 @@ defmodule SportsbookWeb.UserSocket do
   ## Channels
   channel "matches:*", SportsbookWeb.MatchChannel
   channel "match:*", SportsbookWeb.MatchChannel
+  channel "match_details:*", SportsbookWeb.MatchChannel
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After

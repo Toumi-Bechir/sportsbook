@@ -1,6 +1,13 @@
 import React from 'react';
 
-function MatchCard({ match, sport, formatTime }) {
+function MatchCard({ 
+  match, 
+  sport, 
+  formatTime, 
+  isExpanded, 
+  onToggle, 
+  fullMatchData 
+}) {
   const { data } = match;
 
   const getScore = () => {
@@ -146,13 +153,71 @@ function MatchCard({ match, sport, formatTime }) {
     }
   };
 
+  const renderMarkets = () => {
+    if (!fullMatchData?.odds || !Array.isArray(fullMatchData.odds)) {
+      return <div className="no-markets">No markets available</div>;
+    }
+
+    return (
+      <div className="markets-container">
+        <h4 className="markets-title">Markets & Odds</h4>
+        <div className="markets-grid">
+          {fullMatchData.odds.map((market, index) => (
+            <div key={index} className="market-card">
+              <div className="market-header">
+                <h5 className="market-name">
+                  {getMarketName(market.id)} 
+                  {market.ha && <span className="handicap">({market.ha})</span>}
+                </h5>
+              </div>
+              <div className="odds-list">
+                {market.o && Array.isArray(market.o) ? (
+                  market.o.map((odd, oddIndex) => (
+                    <button 
+                      key={oddIndex} 
+                      className="odd-button"
+                      disabled={odd.bl === 1}
+                    >
+                      <span className="odd-name">{odd.n}</span>
+                      <span className="odd-value">{odd.v}</span>
+                    </button>
+                  ))
+                ) : (
+                  <div className="no-odds">No odds available</div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const getMarketName = (marketId) => {
+    const marketNames = {
+      27: '1X2 (Full Time)',
+      2: 'Over/Under',
+      12: 'Asian Handicap',
+      1777: 'Double Chance',
+      10115: 'Draw No Bet',
+      227: 'Correct Score',
+      113: 'Odd/Even',
+      317: 'Both Teams to Score',
+      421: 'Total Goals',
+      2000: 'Half Time/Full Time',
+      1450: 'Total Points',
+      1446: 'Point Spread'
+    };
+    return marketNames[marketId] || `Market ${marketId}`;
+  };
+
   const isLive = data?.time > 0;
 
   return (
     <div className="match-card">
       {isLive && <div className="live-indicator">Live</div>}
       
-      <div className="match-header">
+      <div className="match-header" onClick={onToggle}>
         <div className="teams">
           <div className="team-names">
             {data?.t1?.name || 'Team 1'} vs {data?.t2?.name || 'Team 2'}
@@ -163,8 +228,19 @@ function MatchCard({ match, sport, formatTime }) {
             <span>ID: {data?.id}</span>
           </div>
         </div>
-        <div className="score">
-          {getScore()}
+        <div className="match-header-right">
+          <div className="score">
+            {getScore()}
+          </div>
+          <button 
+            className={`toggle-button ${isExpanded ? 'expanded' : ''}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggle();
+            }}
+          >
+            ▼
+          </button>
         </div>
       </div>
 
@@ -180,6 +256,14 @@ function MatchCard({ match, sport, formatTime }) {
           <div className="detail-value">{data?.updated_at || 'Unknown'}</div>
         </div>
       </div>
+
+      {isExpanded && (
+        <div className="match-expansion">
+          {fullMatchData ? renderMarkets() : (
+            <div className="loading-markets">Loading markets...</div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

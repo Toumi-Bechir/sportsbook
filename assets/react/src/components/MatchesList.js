@@ -1,7 +1,14 @@
 import React from 'react';
 import MatchCard from './MatchCard';
 
-function MatchesList({ sport, matches, formatTime }) {
+function MatchesList({ 
+  sport, 
+  matches, 
+  formatTime, 
+  expandedMatch, 
+  onToggleMatch, 
+  fullMatchData 
+}) {
   const formatSportName = (sport) => {
     const sportNames = {
       soccer: '⚽ Soccer',
@@ -33,6 +40,11 @@ function MatchesList({ sport, matches, formatTime }) {
     <div className="matches-container">
       <div className="matches-header">
         <h2>{formatSportName(sport)} Matches</h2>
+        {expandedMatch && (
+          <div className="expanded-indicator">
+            📊 Showing detailed view for match {expandedMatch}
+          </div>
+        )}
       </div>
       
       {matches.map((league, index) => (
@@ -47,6 +59,9 @@ function MatchesList({ sport, matches, formatTime }) {
                 match={match}
                 sport={sport}
                 formatTime={formatTime}
+                isExpanded={expandedMatch === match.id}
+                onToggle={() => onToggleMatch(match.id)}
+                fullMatchData={expandedMatch === match.id ? fullMatchData[match.id] : null}
               />
             ))}
           </div>
