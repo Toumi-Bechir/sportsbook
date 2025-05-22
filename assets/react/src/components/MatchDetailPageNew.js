@@ -566,19 +566,117 @@ function MatchDetailPageNew() {
                 ← Back to Live Events
               </button>
               
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {sports.map(sport => (
-                  <button
-                    key={sport.name}
-                    className="w-full text-left p-3 rounded-lg bg-gray-750 border border-gray-600 hover:bg-gray-700 transition-colors"
-                    onClick={() => {
-                      handleSportChange(sport.name);
-                      setIsMobileMenuOpen(false);
-                    }}
-                  >
-                    <div className="font-medium text-white">{formatSportName(sport.name)}</div>
-                    <div className="text-sm text-gray-400">{sport.match_count} matches</div>
-                  </button>
+                  <div key={sport.name}>
+                    {/* Sport Header - Clickable to expand/collapse */}
+                    <button
+                      className={`w-full text-left p-3 rounded-lg transition-colors ${
+                        selectedSport === sport.name 
+                          ? 'bg-yellow-500 text-black' 
+                          : 'bg-gray-750 border border-gray-600 hover:bg-gray-700 text-white'
+                      }`}
+                      onClick={() => toggleSidebarSport(sport.name)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg">{
+                            sport.name === 'soccer' ? '⚽' :
+                            sport.name === 'basket' ? '🏀' :
+                            sport.name === 'tennis' ? '🎾' :
+                            sport.name === 'baseball' ? '⚾' :
+                            sport.name === 'amfootball' ? '🏈' :
+                            sport.name === 'hockey' ? '🏒' :
+                            sport.name === 'volleyball' ? '🏐' : '🏆'
+                          }</span>
+                          <div>
+                            <div className="font-medium text-sm">
+                              {formatSportName(sport.name)}
+                            </div>
+                            <div className="text-xs opacity-75">{sport.match_count} matches</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {selectedSport === sport.name && (
+                            <span className="text-xs px-2 py-1 rounded-full font-bold bg-black text-yellow-400">
+                              CURRENT
+                            </span>
+                          )}
+                          <span className={selectedSport === sport.name ? 'text-black' : 'text-gray-400'}>
+                            {expandedSportsInSidebar.has(sport.name) ? '▼' : '►'}
+                          </span>
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Expanded Matches List for Mobile */}
+                    {expandedSportsInSidebar.has(sport.name) && allMatches[sport.name] && (
+                      <div className="ml-4 mt-2 mb-2 bg-white rounded-lg border border-gray-600 overflow-hidden">
+                        {allMatches[sport.name].map((league, leagueIndex) => (
+                          <div key={leagueIndex}>
+                            {/* League Header */}
+                            <div className="px-3 py-2 text-xs font-bold bg-blue-50 text-blue-600 border-b border-gray-200">
+                              {league.league} ({league.matches.length})
+                            </div>
+                            
+                            {/* League Matches */}
+                            {league.matches.map((match, matchIndex) => {
+                              const isCurrentMatch = match.id === matchId && sport.name === selectedSport;
+                              const isLive = match.data?.time > 0;
+                              
+                              return (
+                                <button
+                                  key={match.id}
+                                  className={`w-full text-left p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                                    isCurrentMatch ? 'bg-yellow-50' : ''
+                                  }`}
+                                  onClick={() => {
+                                    handleMatchSelect(sport.name, match.id);
+                                    setIsMobileMenuOpen(false);
+                                  }}
+                                >
+                                  <div className="flex items-center justify-between mb-1">
+                                    <div className="flex items-center gap-2">
+                                      {isLive && (
+                                        <span className="w-2 h-2 rounded-full animate-pulse bg-red-500"></span>
+                                      )}
+                                      <span className="text-xs text-gray-600">
+                                        {isLive ? formatTime(match.data.time) : 'Pre-Match'}
+                                      </span>
+                                    </div>
+                                    {isCurrentMatch && (
+                                      <span className="text-xs px-1 py-0.5 rounded font-bold bg-yellow-400 text-black">
+                                        VIEWING
+                                      </span>
+                                    )}
+                                  </div>
+                                  
+                                  <div className="text-xs space-y-0.5">
+                                    <div className="flex justify-between">
+                                      <span className="font-medium text-blue-900">
+                                        {match.data?.t1?.name || 'Team 1'}
+                                      </span>
+                                      <span className="font-bold text-red-600">
+                                        {match.data?.t1?.score || 0}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="font-medium text-blue-900">
+                                        {match.data?.t2?.name || 'Team 2'}
+                                      </span>
+                                      <span className="font-bold text-red-600">
+                                        {match.data?.t2?.score || 0}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
@@ -845,6 +943,320 @@ function MatchDetailPageNew() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Mobile Tracker - Only visible on smaller screens */}
+            <div className="xl:hidden p-4 bg-white border-b border-gray-200">
+              {/* Mobile Tracker Navigation */}
+              <div className="flex items-center gap-1 mb-4">
+                <button 
+                  className={`px-3 py-2 text-xs font-medium rounded-lg transition-all flex-1 text-center ${
+                    activeTab === 'stats' 
+                      ? 'bg-blue-600 text-white shadow-lg' 
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+                  }`}
+                  onClick={() => setActiveTab('stats')}
+                >
+                  📊 Statistics
+                </button>
+                <button 
+                  className={`px-3 py-2 text-xs font-medium rounded-lg transition-all flex-1 text-center ${
+                    activeTab === 'tracker' 
+                      ? 'bg-blue-600 text-white shadow-lg' 
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+                  }`}
+                  onClick={() => setActiveTab('tracker')}
+                >
+                  ⚽ Live Tracker
+                </button>
+              </div>
+
+              {/* Mobile Statistics content */}
+              {activeTab === 'stats' && (
+                <div className="mb-4">
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <div className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                      📊 Match Statistics
+                    </div>
+                    <div className="space-y-3 text-xs">
+                      <div>
+                        <div className="flex justify-between mb-1">
+                          <span>Possession</span>
+                          <span>65% - 35%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="bg-blue-600 h-2 rounded-full" style={{width: '65%'}}></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between mb-1">
+                          <span>Shots</span>
+                          <span>8 - 3</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="bg-green-600 h-2 rounded-full" style={{width: '72%'}}></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between mb-1">
+                          <span>Shots on Target</span>
+                          <span>4 - 1</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="bg-red-600 h-2 rounded-full" style={{width: '80%'}}></div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 pt-2">
+                        <div className="text-center">
+                          <div className="font-bold">2</div>
+                          <div className="text-gray-500">Corners</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-bold">1</div>
+                          <div className="text-gray-500">Cards</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Mobile Live Tracker content */}
+              {activeTab === 'tracker' && (
+                <div className="mb-4">
+                  {/* Match Header */}
+                  <div style={{ backgroundColor: '#1f2937', color: 'white', padding: '1rem', borderRadius: '0.5rem 0.5rem 0 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: '600' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span>{fullMatchData?.t1?.name || selectedMatch?.data?.t1?.name || 'AZ'}</span>
+                      <span style={{ color: '#60a5fa', fontSize: '1.2rem', fontWeight: '700' }}>
+                        {fullMatchData?.t1?.score ?? selectedMatch?.data?.t1?.score ?? '4'}
+                      </span>
+                    </div>
+                    <div style={{ color: '#9ca3af' }}>-</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ color: '#60a5fa', fontSize: '1.2rem', fontWeight: '700' }}>
+                        {fullMatchData?.t2?.score ?? selectedMatch?.data?.t2?.score ?? '1'}
+                      </span>
+                      <span>{fullMatchData?.t2?.name || selectedMatch?.data?.t2?.name || 'Heerenveen'}</span>
+                    </div>
+                  </div>
+
+                  {/* Soccer Field Tracker */}
+                  <div style={{ backgroundColor: '#000000', position: 'relative', borderRadius: '0 0 0.5rem 0.5rem', overflow: 'hidden' }}>
+                    <svg viewBox="0 0 450 300" style={{ width: '100%', height: 'auto', minHeight: '250px', display: 'block' }}>
+                      {/* Define realistic grass texture and effects */}
+                      <defs>
+                        {/* Grass texture pattern */}
+                        <pattern id="grassTextureMobile" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                          <rect width="20" height="20" fill="#2d5a3d"/>
+                          <rect x="0" y="0" width="10" height="10" fill="#245132" opacity="0.8"/>
+                          <rect x="10" y="10" width="10" height="10" fill="#245132" opacity="0.8"/>
+                          <circle cx="5" cy="5" r="1" fill="#1f4529" opacity="0.6"/>
+                          <circle cx="15" cy="15" r="1" fill="#1f4529" opacity="0.6"/>
+                        </pattern>
+                        
+                        {/* Field lighting gradient */}
+                        <radialGradient id="fieldLightingMobile" cx="50%" cy="50%" r="70%">
+                          <stop offset="0%" stopColor="#4ade80" stopOpacity="0.3"/>
+                          <stop offset="70%" stopColor="#22c55e" stopOpacity="0.1"/>
+                          <stop offset="100%" stopColor="#16a34a" stopOpacity="0.2"/>
+                        </radialGradient>
+
+                        {/* Ball shadow filter */}
+                        <filter id="ballShadowMobile" x="-50%" y="-50%" width="200%" height="200%">
+                          <feDropShadow dx="1" dy="2" stdDeviation="1" floodColor="#000000" floodOpacity="0.3"/>
+                        </filter>
+                      </defs>
+
+                      {/* Field Background with grass texture */}
+                      <rect x="0" y="0" width="450" height="300" fill="url(#grassTextureMobile)"/>
+                      <rect x="0" y="0" width="450" height="300" fill="url(#fieldLightingMobile)"/>
+                      
+                      {/* Field Border */}
+                      <rect x="10" y="10" width="430" height="280" fill="none" stroke="#ffffff" strokeWidth="2"/>
+                      
+                      {/* Center Line */}
+                      <line x1="225" y1="10" x2="225" y2="290" stroke="#ffffff" strokeWidth="2"/>
+                      
+                      {/* Center Circle */}
+                      <circle cx="225" cy="150" r="40" fill="none" stroke="#ffffff" strokeWidth="2"/>
+                      <circle cx="225" cy="150" r="2" fill="#ffffff"/>
+                      
+                      {/* Left Penalty Area */}
+                      <rect x="10" y="80" width="55" height="140" fill="none" stroke="#ffffff" strokeWidth="2"/>
+                      
+                      {/* Right Penalty Area */}
+                      <rect x="385" y="80" width="55" height="140" fill="none" stroke="#ffffff" strokeWidth="2"/>
+                      
+                      {/* Left Goal Area */}
+                      <rect x="10" y="115" width="20" height="70" fill="none" stroke="#ffffff" strokeWidth="2"/>
+                      
+                      {/* Right Goal Area */}
+                      <rect x="420" y="115" width="20" height="70" fill="none" stroke="#ffffff" strokeWidth="2"/>
+                      
+                      {/* Left Goal */}
+                      <rect x="7" y="125" width="3" height="50" fill="#ffffff"/>
+                      
+                      {/* Right Goal */}
+                      <rect x="440" y="125" width="3" height="50" fill="#ffffff"/>
+                      
+                      {/* Penalty Spots */}
+                      <circle cx="37" cy="150" r="2" fill="#ffffff"/>
+                      <circle cx="413" cy="150" r="2" fill="#ffffff"/>
+                      
+                      {/* Corner Arcs */}
+                      <path d="M 10 10 A 8 8 0 0 1 18 10" fill="none" stroke="#ffffff" strokeWidth="2"/>
+                      <path d="M 432 10 A 8 8 0 0 0 440 10" fill="none" stroke="#ffffff" strokeWidth="2"/>
+                      <path d="M 10 290 A 8 8 0 0 0 18 290" fill="none" stroke="#ffffff" strokeWidth="2"/>
+                      <path d="M 432 290 A 8 8 0 0 1 440 290" fill="none" stroke="#ffffff" strokeWidth="2"/>
+
+                      {/* Match Time Display */}
+                      <rect x="195" y="25" width="60" height="25" fill="#000000" fillOpacity="0.8" rx="4"/>
+                      <text x="225" y="42" textAnchor="middle" fill="#00ff88" fontSize="14" fontWeight="bold" fontFamily="Arial">
+                        {formatTime(fullMatchData?.time ?? selectedMatch?.data?.time) || '85:06'}
+                      </text>
+                      
+                      {/* Ball Trail - using ballTrail state */}
+                      {ballTrail.length > 1 && (
+                        <g>
+                          {ballTrail.map((pos, index) => {
+                            if (index === 0) return null;
+                            const prevPos = ballTrail[index - 1];
+                            const opacity = Math.max(0.2, (index / ballTrail.length) * 0.8);
+                            const prevX = 10 + (prevPos.x * 430);
+                            const prevY = 10 + (prevPos.y * 280);
+                            const currX = 10 + (pos.x * 430);
+                            const currY = 10 + (pos.y * 280);
+                            
+                            return (
+                              <line
+                                key={`trail-${index}`}
+                                x1={prevX}
+                                y1={prevY}
+                                x2={currX}
+                                y2={currY}
+                                stroke="#00ff88"
+                                strokeWidth="3"
+                                opacity={opacity}
+                                strokeDasharray="3,2"
+                              />
+                            );
+                          })}
+                        </g>
+                      )}
+
+                      {/* Ball Position - using real xy coordinates from big_data */}
+                      {(() => {
+                        // Parse xy coordinates from big_data
+                        let ballX = 295; // default position
+                        let ballY = 120;
+                        
+                        if (fullMatchData?.xy) {
+                          const coords = fullMatchData.xy.split(',');
+                          if (coords.length === 2) {
+                            const x = parseFloat(coords[0]); // 0-1 range
+                            const y = parseFloat(coords[1]); // 0-1 range
+                            
+                            // Map to field dimensions (accounting for field borders)
+                            // Field area: x=10 to x=440 (430px wide), y=10 to y=290 (280px tall)
+                            ballX = 10 + (x * 430);
+                            ballY = 10 + (y * 280);
+                          }
+                        }
+                        
+                        return (
+                          <g transform={`translate(${ballX}, ${ballY})`}>
+                            {/* Ball shadow */}
+                            <ellipse cx="1" cy="8" rx="4" ry="2" fill="#000000" fillOpacity="0.3"/>
+                            
+                            {/* Ball */}
+                            <circle 
+                              cx="0" 
+                              cy="0" 
+                              r="5" 
+                              fill="#ffffff" 
+                              stroke="#000000" 
+                              strokeWidth="1"
+                              filter="url(#ballShadowMobile)"
+                            >
+                              <animate attributeName="cy" values="0;-2;0" dur="0.8s" repeatCount="indefinite"/>
+                            </circle>
+                            
+                            {/* Ball pattern */}
+                            <path d="M-3,-2 L3,-2 M-2,-4 L2,0 M-2,4 L2,0" stroke="#000000" strokeWidth="0.5" fill="none"/>
+                          </g>
+                        );
+                      })()}
+
+                      {/* Live Event Indicator - using sc (state code) from big_data */}
+                      {(() => {
+                        // Get event name from sc code using match events dictionary
+                        let eventName = 'In Possession';
+                        let teamName = fullMatchData?.t2?.name || selectedMatch?.data?.t2?.name || 'Heerenveen';
+                        
+                        if (fullMatchData?.sc && matchEventsDictionaries[selectedSport]) {
+                          const eventFromDict = matchEventsDictionaries[selectedSport][fullMatchData.sc];
+                          if (eventFromDict) {
+                            eventName = eventFromDict;
+                            // If it's a specific event, show it without team name
+                            if (eventName !== 'In Possession') {
+                              teamName = '';
+                            }
+                          }
+                        }
+                        
+                        return (
+                          <g>
+                            <rect x="320" y="60" width="110" height="30" fill="#000000" fillOpacity="0.8" rx="4"/>
+                            <text x="375" y="78" textAnchor="middle" fill="#00ff88" fontSize="12" fontWeight="bold" fontFamily="Arial">
+                              {teamName}
+                            </text>
+                            <text x="375" y="90" textAnchor="middle" fill="#00ff88" fontSize="10" fontFamily="Arial">
+                              {eventName}
+                            </text>
+                          </g>
+                        );
+                      })()}
+
+                      {/* Live Event Animation - pulsing circle for active events */}
+                      {fullMatchData?.sc && (
+                        (() => {
+                          // Parse ball coordinates for event position
+                          let eventX = 295;
+                          let eventY = 120;
+                          
+                          if (fullMatchData?.xy) {
+                            const coords = fullMatchData.xy.split(',');
+                            if (coords.length === 2) {
+                              const x = parseFloat(coords[0]);
+                              const y = parseFloat(coords[1]);
+                              eventX = 10 + (x * 430);
+                              eventY = 10 + (y * 280);
+                            }
+                          }
+                          
+                          return (
+                            <g>
+                              <circle 
+                                cx={eventX} 
+                                cy={eventY} 
+                                r="15" 
+                                fill="none" 
+                                stroke="#00ff88" 
+                                strokeWidth="2"
+                                opacity="0.7"
+                              >
+                                <animate attributeName="r" values="15;25;15" dur="2s" repeatCount="indefinite"/>
+                                <animate attributeName="opacity" values="0.7;0.2;0.7" dur="2s" repeatCount="indefinite"/>
+                              </circle>
+                            </g>
+                          );
+                        })()
+                      )}
+                    </svg>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Markets Content - Always displayed */}
