@@ -969,26 +969,138 @@ function MatchDetailPage() {
               {/* Live Tracker content (when tracker tab active) */}
               {activeTab === 'tracker' && (
                 <div className="mb-6">
-                  <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-xl p-4 text-white mb-4">
-                    <div className="text-sm font-medium mb-2 flex items-center gap-2">
-                      <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-                      ⚽ Live Match Tracker
+                  {/* Match Header */}
+                  <div style={{ backgroundColor: '#1f2937', color: 'white', padding: '1rem', borderRadius: '0.5rem 0.5rem 0 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: '600' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span>{fullMatchData?.t1?.name || selectedMatch?.data?.t1?.name || 'AZ'}</span>
+                      <span style={{ color: '#60a5fa', fontSize: '1.2rem', fontWeight: '700' }}>
+                        {fullMatchData?.t1?.score ?? selectedMatch?.data?.t1?.score ?? '4'}
+                      </span>
                     </div>
-                    <div className="text-xs mb-3">Real-time match events and timeline</div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center text-xs">
-                        <span>45' Goal! Team 1</span>
-                        <span className="bg-white bg-opacity-20 px-2 py-1 rounded">⚽</span>
-                      </div>
-                      <div className="flex justify-between items-center text-xs">
-                        <span>38' Yellow Card</span>
-                        <span className="bg-yellow-400 text-black px-2 py-1 rounded">🟨</span>
-                      </div>
-                      <div className="flex justify-between items-center text-xs">
-                        <span>22' Corner Kick</span>
-                        <span className="bg-white bg-opacity-20 px-2 py-1 rounded">🚩</span>
-                      </div>
+                    <div style={{ color: '#9ca3af' }}>-</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ color: '#60a5fa', fontSize: '1.2rem', fontWeight: '700' }}>
+                        {fullMatchData?.t2?.score ?? selectedMatch?.data?.t2?.score ?? '1'}
+                      </span>
+                      <span>{fullMatchData?.t2?.name || selectedMatch?.data?.t2?.name || 'Heerenveen'}</span>
                     </div>
+                  </div>
+
+                  {/* Soccer Field Tracker */}
+                  <div style={{ backgroundColor: '#000000', position: 'relative', borderRadius: '0 0 0.5rem 0.5rem', overflow: 'hidden' }}>
+                    <svg viewBox="0 0 450 300" style={{ width: '100%', height: 'auto', minHeight: '250px', display: 'block' }}>
+                      {/* Define realistic grass texture and effects */}
+                      <defs>
+                        {/* Grass texture pattern */}
+                        <pattern id="grassTexture" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                          <rect width="20" height="20" fill="#2d5a3d"/>
+                          <rect x="0" y="0" width="10" height="10" fill="#245132" opacity="0.8"/>
+                          <rect x="10" y="10" width="10" height="10" fill="#245132" opacity="0.8"/>
+                          <circle cx="5" cy="5" r="1" fill="#1f4529" opacity="0.6"/>
+                          <circle cx="15" cy="15" r="1" fill="#1f4529" opacity="0.6"/>
+                        </pattern>
+                        
+                        {/* Field lighting gradient */}
+                        <radialGradient id="fieldLighting" cx="50%" cy="50%" r="70%">
+                          <stop offset="0%" stopColor="#4ade80" stopOpacity="0.3"/>
+                          <stop offset="70%" stopColor="#22c55e" stopOpacity="0.1"/>
+                          <stop offset="100%" stopColor="#16a34a" stopOpacity="0.2"/>
+                        </radialGradient>
+
+                        {/* Ball shadow filter */}
+                        <filter id="ballShadow" x="-50%" y="-50%" width="200%" height="200%">
+                          <feDropShadow dx="1" dy="2" stdDeviation="1" floodColor="#000000" floodOpacity="0.3"/>
+                        </filter>
+                      </defs>
+
+                      {/* Field Background with grass texture */}
+                      <rect x="0" y="0" width="450" height="300" fill="url(#grassTexture)"/>
+                      <rect x="0" y="0" width="450" height="300" fill="url(#fieldLighting)"/>
+                      
+                      {/* Field Border */}
+                      <rect x="10" y="10" width="430" height="280" fill="none" stroke="#ffffff" strokeWidth="2"/>
+                      
+                      {/* Center Line */}
+                      <line x1="225" y1="10" x2="225" y2="290" stroke="#ffffff" strokeWidth="2"/>
+                      
+                      {/* Center Circle */}
+                      <circle cx="225" cy="150" r="40" fill="none" stroke="#ffffff" strokeWidth="2"/>
+                      <circle cx="225" cy="150" r="2" fill="#ffffff"/>
+                      
+                      {/* Left Penalty Area */}
+                      <rect x="10" y="80" width="55" height="140" fill="none" stroke="#ffffff" strokeWidth="2"/>
+                      
+                      {/* Right Penalty Area */}
+                      <rect x="385" y="80" width="55" height="140" fill="none" stroke="#ffffff" strokeWidth="2"/>
+                      
+                      {/* Left Goal Area */}
+                      <rect x="10" y="115" width="20" height="70" fill="none" stroke="#ffffff" strokeWidth="2"/>
+                      
+                      {/* Right Goal Area */}
+                      <rect x="420" y="115" width="20" height="70" fill="none" stroke="#ffffff" strokeWidth="2"/>
+                      
+                      {/* Left Goal */}
+                      <rect x="7" y="125" width="3" height="50" fill="#ffffff"/>
+                      
+                      {/* Right Goal */}
+                      <rect x="440" y="125" width="3" height="50" fill="#ffffff"/>
+                      
+                      {/* Penalty Spots */}
+                      <circle cx="37" cy="150" r="2" fill="#ffffff"/>
+                      <circle cx="413" cy="150" r="2" fill="#ffffff"/>
+                      
+                      {/* Corner Arcs */}
+                      <path d="M 10 10 A 8 8 0 0 1 18 10" fill="none" stroke="#ffffff" strokeWidth="2"/>
+                      <path d="M 432 10 A 8 8 0 0 0 440 10" fill="none" stroke="#ffffff" strokeWidth="2"/>
+                      <path d="M 10 290 A 8 8 0 0 0 18 290" fill="none" stroke="#ffffff" strokeWidth="2"/>
+                      <path d="M 432 290 A 8 8 0 0 1 440 290" fill="none" stroke="#ffffff" strokeWidth="2"/>
+
+                      {/* Match Time Display */}
+                      <rect x="195" y="25" width="60" height="25" fill="#000000" fillOpacity="0.8" rx="4"/>
+                      <text x="225" y="42" textAnchor="middle" fill="#00ff88" fontSize="14" fontWeight="bold" fontFamily="Arial">
+                        {formatTime(fullMatchData?.time ?? selectedMatch?.data?.time) || '85:06'}
+                      </text>
+                      
+                      {/* Ball Trail Path - mimicking the image */}
+                      <g>
+                        <line x1="295" y1="120" x2="320" y2="140" stroke="#00ff88" strokeWidth="3" opacity="0.8" strokeDasharray="3,2"/>
+                        <line x1="320" y1="140" x2="340" y2="165" stroke="#00ff88" strokeWidth="3" opacity="0.6" strokeDasharray="3,2"/>
+                        <line x1="340" y1="165" x2="355" y2="185" stroke="#00ff88" strokeWidth="3" opacity="0.4" strokeDasharray="3,2"/>
+                      </g>
+                      
+                      {/* Ball Position - positioned similar to the image */}
+                      <g transform="translate(295, 120)">
+                        {/* Ball shadow */}
+                        <ellipse cx="1" cy="8" rx="4" ry="2" fill="#000000" fillOpacity="0.3"/>
+                        
+                        {/* Ball */}
+                        <circle 
+                          cx="0" 
+                          cy="0" 
+                          r="5" 
+                          fill="#ffffff" 
+                          stroke="#000000" 
+                          strokeWidth="1"
+                          filter="url(#ballShadow)"
+                        >
+                          <animate attributeName="cy" values="0;-2;0" dur="0.8s" repeatCount="indefinite"/>
+                        </circle>
+                        
+                        {/* Ball pattern */}
+                        <path d="M-3,-2 L3,-2 M-2,-4 L2,0 M-2,4 L2,0" stroke="#000000" strokeWidth="0.5" fill="none"/>
+                      </g>
+
+                      {/* Possession Indicator - positioned like in the image */}
+                      <g>
+                        <rect x="320" y="60" width="110" height="30" fill="#000000" fillOpacity="0.8" rx="4"/>
+                        <text x="375" y="78" textAnchor="middle" fill="#00ff88" fontSize="12" fontWeight="bold" fontFamily="Arial">
+                          {fullMatchData?.t2?.name || selectedMatch?.data?.t2?.name || 'Heerenveen'}
+                        </text>
+                        <text x="375" y="90" textAnchor="middle" fill="#00ff88" fontSize="10" fontFamily="Arial">
+                          In Possession
+                        </text>
+                      </g>
+                    </svg>
                   </div>
                 </div>
               )}
