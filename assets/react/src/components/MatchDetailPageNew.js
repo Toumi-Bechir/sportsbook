@@ -484,23 +484,35 @@ function MatchDetailPageNew() {
             <div className="flex items-center gap-8">
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-2 rounded-lg">
-                    <span className="text-white font-black text-lg">S</span>
-                  </div>
+                  {/* Hamburger menu for small screens */}
+                  <button 
+                    className="md:hidden bg-gradient-to-r from-blue-600 to-blue-700 p-2 rounded-lg"
+                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  >
+                    <div className="w-5 h-5 flex flex-col justify-center items-center space-y-1">
+                      <div 
+                        className={`w-4 h-0.5 bg-white transition-all duration-300 ${
+                          isMobileMenuOpen ? 'rotate-45 translate-y-1.5' : ''
+                        }`}
+                      ></div>
+                      <div 
+                        className={`w-4 h-0.5 bg-white transition-all duration-300 ${
+                          isMobileMenuOpen ? 'opacity-0' : ''
+                        }`}
+                      ></div>
+                      <div 
+                        className={`w-4 h-0.5 bg-white transition-all duration-300 ${
+                          isMobileMenuOpen ? '-rotate-45 -translate-y-1.5' : ''
+                        }`}
+                      ></div>
+                    </div>
+                  </button>
                   <h1 className="font-bold text-2xl bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
                     SportsBet
                   </h1>
                 </div>
                 
-                <div className="flex items-center gap-2 bg-gray-700 px-3 py-1.5 rounded-full text-xs">
-                  <div 
-                    className={`w-2 h-2 rounded-full animate-pulse ${
-                      connectionStatus === 'connected' ? 'bg-green-500' : 'bg-red-500'
-                    }`}
-                  />
-                  <span className="text-gray-300 font-medium">{connectionStatus.toUpperCase()}</span>
-                </div>
-              </div>
+                
               
               <div className="hidden lg:flex items-center gap-4 text-sm">
                 {isLive && (
@@ -513,26 +525,15 @@ function MatchDetailPageNew() {
                   <span className="text-gray-300">Match #{matchId}</span>
                 </div>
               </div>
+              </div>
             </div>
             
             <div className="flex items-center gap-4">
               <button 
-                className="hidden md:block bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                onClick={() => setIsLeftSidebarOpen(!isLeftSidebarOpen)}
-              >
-                {isLeftSidebarOpen ? '◄' : '►'}
-              </button>
-              <button 
                 className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 px-6 py-2.5 rounded-lg font-bold text-sm transition-all duration-200 transform hover:scale-105"
                 onClick={() => navigate('/')}
               >
-                ← Back to Live
-              </button>
-              <button
-                className="md:hidden bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg text-sm transition-colors"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              >
-                {isMobileMenuOpen ? '✕' : '☰'}
+                ← Live
               </button>
             </div>
           </div>
