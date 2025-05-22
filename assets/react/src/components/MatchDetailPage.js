@@ -18,6 +18,9 @@ function MatchDetailPage() {
   const [activeTab, setActiveTab] = useState('tracker');
   const [selectedMarketCategory, setSelectedMarketCategory] = useState('popular');
   
+  // Ball trail tracking
+  const [ballTrail, setBallTrail] = useState([]);
+  
   // Dictionaries
   const [marketDictionaries, setMarketDictionaries] = useState({});
   const [matchEventsDictionaries, setMatchEventsDictionaries] = useState({});
@@ -152,7 +155,26 @@ function MatchDetailPage() {
       });
 
     detailChannel.on('full_match_data', payload => {
-      setFullMatchData(payload.data);
+      const newData = payload.data;
+      setFullMatchData(newData);
+      
+      // Track ball position for trail effect
+      if (newData?.xy) {
+        const coords = newData.xy.split(',');
+        if (coords.length === 2) {
+          const x = parseFloat(coords[0]);
+          const y = parseFloat(coords[1]);
+          
+          setBallTrail(prevTrail => {
+            const newTrail = [...prevTrail, { x, y, timestamp: Date.now() }];
+            // Keep only last 8 positions and remove old ones (older than 10 seconds)
+            const cutoffTime = Date.now() - 10000;
+            return newTrail
+              .filter(pos => pos.timestamp > cutoffTime)
+              .slice(-8);
+          });
+        }
+      }
     });
 
     detailChannelRef.current = detailChannel;
@@ -1061,45 +1083,143 @@ function MatchDetailPage() {
                         {formatTime(fullMatchData?.time ?? selectedMatch?.data?.time) || '85:06'}
                       </text>
                       
-                      {/* Ball Trail Path - mimicking the image */}
-                      <g>
-                        <line x1="295" y1="120" x2="320" y2="140" stroke="#00ff88" strokeWidth="3" opacity="0.8" strokeDasharray="3,2"/>
-                        <line x1="320" y1="140" x2="340" y2="165" stroke="#00ff88" strokeWidth="3" opacity="0.6" strokeDasharray="3,2"/>
-                        <line x1="340" y1="165" x2="355" y2="185" stroke="#00ff88" strokeWidth="3" opacity="0.4" strokeDasharray="3,2"/>
-                      </g>
-                      
-                      {/* Ball Position - positioned similar to the image */}
-                      <g transform="translate(295, 120)">
-                        {/* Ball shadow */}
-                        <ellipse cx="1" cy="8" rx="4" ry="2" fill="#000000" fillOpacity="0.3"/>
-                        
-                        {/* Ball */}
-                        <circle 
-                          cx="0" 
-                          cy="0" 
-                          r="5" 
-                          fill="#ffffff" 
-                          stroke="#000000" 
-                          strokeWidth="1"
-                          filter="url(#ballShadow)"
-                        >
-                          <animate attributeName="cy" values="0;-2;0" dur="0.8s" repeatCount="indefinite"/>
-                        </circle>
-                        
-                        {/* Ball pattern */}
-                        <path d="M-3,-2 L3,-2 M-2,-4 L2,0 M-2,4 L2,0" stroke="#000000" strokeWidth="0.5" fill="none"/>
-                      </g>
+                      {/* Ball Trail - using ballTrail state */}
+                      {ballTrail.length > 1 && (
+                        <g>
+                          {ballTrail.map((pos, index) => {
+                            if (index === 0) return null;
+                            const prevPos = ballTrail[index - 1];
+                            const opacity = Math.max(0.2, (index / ballTrail.length) * 0.8);
+                            const prevX = 10 + (prevPos.x * 430);
+                            const prevY = 10 + (prevPos.y * 280);
+                            const currX = 10 + (pos.x * 430);
+                            const currY = 10 + (pos.y * 280);
+                            
+                            return (
+                              <line
+                                key={`trail-${index}`}
+                                x1={prevX}
+                                y1={prevY}
+                                x2={currX}
+                                y2={currY}
+                                stroke="#00ff88"
+                                strokeWidth="3"
+                                opacity={opacity}
+                                strokeDasharray="3,2"
+                              />
+                            );
+                          })}
+                        </g>
+                      )}
 
-                      {/* Possession Indicator - positioned like in the image */}
-                      <g>
-                        <rect x="320" y="60" width="110" height="30" fill="#000000" fillOpacity="0.8" rx="4"/>
-                        <text x="375" y="78" textAnchor="middle" fill="#00ff88" fontSize="12" fontWeight="bold" fontFamily="Arial">
-                          {fullMatchData?.t2?.name || selectedMatch?.data?.t2?.name || 'Heerenveen'}
-                        </text>
-                        <text x="375" y="90" textAnchor="middle" fill="#00ff88" fontSize="10" fontFamily="Arial">
-                          In Possession
-                        </text>
-                      </g>
+                      {/* Ball Position - using real xy coordinates from big_data */}
+                      {(() => {
+                        // Parse xy coordinates from big_data
+                        let ballX = 295; // default position
+                        let ballY = 120;
+                        
+                        if (fullMatchData?.xy) {
+                          const coords = fullMatchData.xy.split(',');
+                          if (coords.length === 2) {
+                            const x = parseFloat(coords[0]); // 0-1 range
+                            const y = parseFloat(coords[1]); // 0-1 range
+                            
+                            // Map to field dimensions (accounting for field borders)
+                            // Field area: x=10 to x=440 (430px wide), y=10 to y=290 (280px tall)
+                            ballX = 10 + (x * 430);
+                            ballY = 10 + (y * 280);
+                          }
+                        }
+                        
+                        return (
+                          <g transform={`translate(${ballX}, ${ballY})`}>
+                            {/* Ball shadow */}
+                            <ellipse cx="1" cy="8" rx="4" ry="2" fill="#000000" fillOpacity="0.3"/>
+                            
+                            {/* Ball */}
+                            <circle 
+                              cx="0" 
+                              cy="0" 
+                              r="5" 
+                              fill="#ffffff" 
+                              stroke="#000000" 
+                              strokeWidth="1"
+                              filter="url(#ballShadow)"
+                            >
+                              <animate attributeName="cy" values="0;-2;0" dur="0.8s" repeatCount="indefinite"/>
+                            </circle>
+                            
+                            {/* Ball pattern */}
+                            <path d="M-3,-2 L3,-2 M-2,-4 L2,0 M-2,4 L2,0" stroke="#000000" strokeWidth="0.5" fill="none"/>
+                          </g>
+                        );
+                      })()}
+
+                      {/* Live Event Indicator - using sc (state code) from big_data */}
+                      {(() => {
+                        // Get event name from sc code using match events dictionary
+                        let eventName = 'In Possession';
+                        let teamName = fullMatchData?.t2?.name || selectedMatch?.data?.t2?.name || 'Heerenveen';
+                        
+                        if (fullMatchData?.sc && matchEventsDictionaries[selectedSport]) {
+                          const eventFromDict = matchEventsDictionaries[selectedSport][fullMatchData.sc];
+                          if (eventFromDict) {
+                            eventName = eventFromDict;
+                            // If it's a specific event, show it without team name
+                            if (eventName !== 'In Possession') {
+                              teamName = '';
+                            }
+                          }
+                        }
+                        
+                        return (
+                          <g>
+                            <rect x="320" y="60" width="110" height="30" fill="#000000" fillOpacity="0.8" rx="4"/>
+                            <text x="375" y="78" textAnchor="middle" fill="#00ff88" fontSize="12" fontWeight="bold" fontFamily="Arial">
+                              {teamName}
+                            </text>
+                            <text x="375" y="90" textAnchor="middle" fill="#00ff88" fontSize="10" fontFamily="Arial">
+                              {eventName}
+                            </text>
+                          </g>
+                        );
+                      })()}
+
+                      {/* Live Event Animation - pulsing circle for active events */}
+                      {fullMatchData?.sc && (
+                        (() => {
+                          // Parse ball coordinates for event position
+                          let eventX = 295;
+                          let eventY = 120;
+                          
+                          if (fullMatchData?.xy) {
+                            const coords = fullMatchData.xy.split(',');
+                            if (coords.length === 2) {
+                              const x = parseFloat(coords[0]);
+                              const y = parseFloat(coords[1]);
+                              eventX = 10 + (x * 430);
+                              eventY = 10 + (y * 280);
+                            }
+                          }
+                          
+                          return (
+                            <g>
+                              <circle 
+                                cx={eventX} 
+                                cy={eventY} 
+                                r="15" 
+                                fill="none" 
+                                stroke="#00ff88" 
+                                strokeWidth="2"
+                                opacity="0.7"
+                              >
+                                <animate attributeName="r" values="15;25;15" dur="2s" repeatCount="indefinite"/>
+                                <animate attributeName="opacity" values="0.7;0.2;0.7" dur="2s" repeatCount="indefinite"/>
+                              </circle>
+                            </g>
+                          );
+                        })()
+                      )}
                     </svg>
                   </div>
                 </div>
