@@ -7,7 +7,9 @@ function MatchesList({
   formatTime, 
   expandedMatch, 
   onToggleMatch, 
-  fullMatchData 
+  fullMatchData,
+  marketDictionary,
+  matchEventsDictionary 
 }) {
   const formatSportName = (sport) => {
     const sportNames = {
@@ -62,6 +64,8 @@ function MatchesList({
                 isExpanded={expandedMatch === match.id}
                 onToggle={() => onToggleMatch(match.id)}
                 fullMatchData={expandedMatch === match.id ? fullMatchData[match.id] : null}
+                marketDictionary={marketDictionary}
+                matchEventsDictionary={matchEventsDictionary}
               />
             ))}
           </div>

@@ -354,6 +354,13 @@
   margin: 0;
 }
 
+.market-id {
+  font-weight: normal;
+  color: #9ca3af;
+  font-size: 0.75rem;
+  margin-left: 0.5rem;
+}
+
 .handicap {
   font-weight: normal;
   color: #6b7280;

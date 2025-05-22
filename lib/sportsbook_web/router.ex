@@ -50,6 +50,8 @@ defmodule SportsbookWeb.Router do
     get "/sports", ApiController, :sports
     get "/matches", ApiController, :matches
     get "/matches/:sport", ApiController, :matches
+    get "/market-name/:sport/:market_id", ApiController, :market_name
+    get "/markets/:sport", ApiController, :markets
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

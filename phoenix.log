@@ -1,0 +1,864 @@
+    warning: variable "matches" is unused (if the variable is not meant to be used, prefix it with an underscore)
+    │
+ 20 │     |> Enum.map(fn {sport, matches} -> sport end)
+    │                            ~
+    │
+    └─ lib/sportsbook_web/live/home_live/index.ex:20:28: SportsbookWeb.HomeLive.Index.mount/3
+
+     warning: variable "conn" is unused (if the variable is not meant to be used, prefix it with an underscore)
+     │
+ 116 │   def handle_connect(conn, state) do
+     │                      ~~~~
+     │
+     └─ lib/sportsbook/api/websocket_client.ex:116:22: Sportsbook.API.WebsocketClient.handle_connect/2
+
+     warning: Logger.warn/1 is deprecated. Use Logger.warning/2 instead
+     │
+ 130 │         Logger.warn("Received non-JSON message from #{state.sport} websocket: #{msg}")
+     │                ~
+     │
+     └─ lib/sportsbook/api/websocket_client.ex:130:16: Sportsbook.API.WebsocketClient.handle_frame/2
+
+     warning: Logger.warn/1 is deprecated. Use Logger.warning/2 instead
+     │
+ 144 │     Logger.warn("#{state.sport} websocket disconnected: #{inspect(reason)}")
+     │            ~
+     │
+     └─ lib/sportsbook/api/websocket_client.ex:144:12: Sportsbook.API.WebsocketClient.handle_disconnect/2
+
+     warning: Logger.warn/1 is deprecated. Use Logger.warning/2 instead
+     │
+ 177 │     Logger.warn("#{state.sport} websocket terminated: #{inspect(reason)}")
+     │            ~
+     │
+     └─ lib/sportsbook/api/websocket_client.ex:177:12: Sportsbook.API.WebsocketClient.terminate/2
+
+     warning: Logger.warn/1 is deprecated. Use Logger.warning/2 instead
+     │
+ 234 │         Logger.warn("Unknown sport: #{sport}")
+     │                ~
+     │
+     └─ lib/sportsbook/storage/match_store.ex:234:16: Sportsbook.Storage.MatchStore.get_sport_table/1
+
+    warning: variable "name" is unused (if the variable is not meant to be used, prefix it with an underscore)
+    │
+  8 │         name = if event != [] do
+    │         ~~~~
+    │
+    └─ lib/sportsbook/state_dictionaries.ex:8:9: Boomb.StateDictionaries.get_soccer_state_name/1
+
+    warning: variable "name" is unused (if the variable is not meant to be used, prefix it with an underscore)
+    │
+ 21 │         name = if event != [] do
+    │         ~~~~
+    │
+    └─ lib/sportsbook/state_dictionaries.ex:21:9: Boomb.StateDictionaries.get_basket_state_name/1
+
+    warning: variable "name" is unused (if the variable is not meant to be used, prefix it with an underscore)
+    │
+ 34 │         name = if event != [] do
+    │         ~~~~
+    │
+    └─ lib/sportsbook/state_dictionaries.ex:34:9: Boomb.StateDictionaries.get_tennis_state_name/1
+
+    warning: variable "name" is unused (if the variable is not meant to be used, prefix it with an underscore)
+    │
+ 47 │         name = if event != [] do
+    │         ~~~~
+    │
+    └─ lib/sportsbook/state_dictionaries.ex:47:9: Boomb.StateDictionaries.get_baseball_state_name/1
+
+    warning: variable "name" is unused (if the variable is not meant to be used, prefix it with an underscore)
+    │
+ 60 │         name = if event != [] do
+    │         ~~~~
+    │
+    └─ lib/sportsbook/state_dictionaries.ex:60:9: Boomb.StateDictionaries.get_amfooball_state_name/1
+
+    warning: variable "name" is unused (if the variable is not meant to be used, prefix it with an underscore)
+    │
+ 72 │         name = if event != [] do
+    │         ~~~~
+    │
+    └─ lib/sportsbook/state_dictionaries.ex:72:9: Boomb.StateDictionaries.get_hockey_state_name/1
+
+    warning: variable "name" is unused (if the variable is not meant to be used, prefix it with an underscore)
+    │
+ 85 │         name = if event != [] do
+    │         ~~~~
+    │
+    └─ lib/sportsbook/state_dictionaries.ex:85:9: Boomb.StateDictionaries.get_volleyball_state_name/1
+
+    warning: variable "match_id" is unused (if the variable is not meant to be used, prefix it with an underscore)
+    │
+ 79 │   def handle_info({:match_updated, sport, match_id, _small_data}, socket) do
+    │                                           ~~~~~~~~
+    │
+    └─ lib/sportsbook_web/live/match_live/index.ex:79:43: SportsbookWeb.MatchLive.Index.handle_info/2
+
+    warning: variable "match_id" is unused (if the variable is not meant to be used, prefix it with an underscore)
+    │
+ 90 │   def handle_info({:match_removed, sport, match_id}, socket) do
+    │                                           ~~~~~~~~
+    │
+    └─ lib/sportsbook_web/live/match_live/index.ex:90:43: SportsbookWeb.MatchLive.Index.handle_info/2
+
+    warning: variable "match_id" is unused (if the variable is not meant to be used, prefix it with an underscore)
+    │
+ 71 │                 <%= for {match_id, small_data, _} <- Enum.take(Map.get(@matches_by_sport, sport, []), 5) do %>
+    │                          ~
+    │
+    └─ lib/sportsbook_web/live/match_live/index.html.heex:71:26: SportsbookWeb.MatchLive.Index.render/1
+
+    warning: Phoenix.PubSub.unsubscribe/1 is undefined or private. Did you mean:
+
+          * unsubscribe/2
+
+    │
+ 42 │       Phoenix.PubSub.unsubscribe(socket.assigns.current_sport)
+    │                      ~
+    │
+    └─ lib/sportsbook_web/live/websocket_live/index.ex:42:22: SportsbookWeb.WebsocketLive.Index.handle_event/3
+
+    warning: Phoenix.PubSub.unsubscribe/1 is undefined or private. Did you mean:
+
+          * unsubscribe/2
+
+    │
+ 58 │     Phoenix.PubSub.unsubscribe(socket.assigns.current_sport)
+    │                    ~
+    │
+    └─ lib/sportsbook_web/live/websocket_live/index.ex:58:20: SportsbookWeb.WebsocketLive.Index.handle_event/3
+
+    warning: Phoenix.PubSub.subscribe/1 is undefined or private. Did you mean:
+
+          * subscribe/3
+          * subscribe/2
+
+    │
+ 61 │     Phoenix.PubSub.subscribe("goalserve:#{sport}")
+    │                    ~
+    │
+    └─ lib/sportsbook_web/live/websocket_live/index.ex:61:20: SportsbookWeb.WebsocketLive.Index.handle_event/3
+
+    warning: variable "sport" is unused (if the variable is not meant to be used, prefix it with an underscore)
+    │
+ 47 │   def handle_info({:after_join, sport}, socket) do
+    │                                 ~~~~~
+    │
+    └─ lib/sportsbook_web/channels/match_channel.ex:47:33: SportsbookWeb.MatchChannel.handle_info/2
+
+     warning: variable "match_id" is unused (if the variable is not meant to be used, prefix it with an underscore)
+     │
+ 111 │   def handle_info({:match_updated, sport, match_id, small_data}, socket) do
+     │                                           ~~~~~~~~
+     │
+     └─ lib/sportsbook_web/channels/match_channel.ex:111:43: SportsbookWeb.MatchChannel.handle_info/2
+
+     warning: variable "small_data" is unused (if the variable is not meant to be used, prefix it with an underscore)
+     │
+ 111 │   def handle_info({:match_updated, sport, match_id, small_data}, socket) do
+     │                                                     ~~~~~~~~~~
+     │
+     └─ lib/sportsbook_web/channels/match_channel.ex:111:53: SportsbookWeb.MatchChannel.handle_info/2
+
+     warning: variable "sport" is unused (if the variable is not meant to be used, prefix it with an underscore)
+     │
+ 111 │   def handle_info({:match_updated, sport, match_id, small_data}, socket) do
+     │                                    ~~~~~
+     │
+     └─ lib/sportsbook_web/channels/match_channel.ex:111:36: SportsbookWeb.MatchChannel.handle_info/2
+
+     warning: variable "match_id" is unused (if the variable is not meant to be used, prefix it with an underscore)
+     │
+ 117 │   def handle_info({:match_removed, sport, match_id}, socket) do
+     │                                           ~~~~~~~~
+     │
+     └─ lib/sportsbook_web/channels/match_channel.ex:117:43: SportsbookWeb.MatchChannel.handle_info/2
+
+     warning: variable "sport" is unused (if the variable is not meant to be used, prefix it with an underscore)
+     │
+ 117 │   def handle_info({:match_removed, sport, match_id}, socket) do
+     │                                    ~~~~~
+     │
+     └─ lib/sportsbook_web/channels/match_channel.ex:117:36: SportsbookWeb.MatchChannel.handle_info/2
+
+     warning: function group_matches_by_league/1 is unused
+     │
+ 130 │   defp group_matches_by_league(matches) do
+     │        ~
+     │
+     └─ lib/sportsbook_web/channels/match_channel.ex:130:8: SportsbookWeb.MatchChannel (module)
+
+    warning: variable "sport" is unused (if the variable is not meant to be used, prefix it with an underscore)
+    │
+ 49 │         <%= for {sport, table_name, _entries} <- @tables_data.sport_tables do %>
+    │                  ~
+    │
+    └─ lib/sportsbook_web/live/admin_live/tables.html.heex:49:18: SportsbookWeb.AdminLive.Tables.render/1
+
+     warning: variable "sport" is unused (if the variable is not meant to be used, prefix it with an underscore)
+     │
+ 122 │           <% {sport, _, entries} = Enum.find(@tables_data.sport_tables, {nil, nil, []}, fn {_, name, _} -> 
+     │               ~
+     │
+     └─ lib/sportsbook_web/live/admin_live/tables.html.heex:122:15: SportsbookWeb.AdminLive.Tables.render/1
+
+[info] Match store initialized with ETS tables with read/write concurrency
+[info] Running SportsbookWeb.Endpoint with Bandit 1.6.11 at 127.0.0.1:4000 (http)
+[info] Access SportsbookWeb.Endpoint at http://localhost:4000
+[watch] build finished, watching for changes...
+
+Rebuilding...
+
+Done in 499ms.
+[info] Client connecting to socket with params: %{"userToken" => "anonymous", "vsn" => "2.0.0"}
+[info] CONNECTED TO SportsbookWeb.UserSocket in 5ms
+  Transport: :websocket
+  Serializer: Phoenix.Socket.V2.JSONSerializer
+  Parameters: %{"userToken" => "anonymous", "vsn" => "2.0.0"}
+[info] Client subscribed to specific match: soccer:118810477
+[info] JOINED match:soccer:118810477 in 209µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118821453
+[info] JOINED match:soccer:118821453 in 279µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118811892
+[info] JOINED match:soccer:118811892 in 187µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118811888
+[info] JOINED match:soccer:118811888 in 143µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118870514
+[info] JOINED match:soccer:118870514 in 125µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118808847
+[info] JOINED match:soccer:118808847 in 154µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118821470
+[info] JOINED match:soccer:118821470 in 133µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118811909
+[info] JOINED match:soccer:118811909 in 264µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118811906
+[info] JOINED match:soccer:118811906 in 150µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118815035
+[info] JOINED match:soccer:118815035 in 114µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118811910
+[info] JOINED match:soccer:118811910 in 180µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822153
+[info] JOINED match:soccer:118822153 in 135µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822607
+[info] JOINED match:soccer:118822607 in 200µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822583
+[info] JOINED match:soccer:118822583 in 120µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822580
+[info] JOINED match:soccer:118822580 in 105µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118854621
+[info] JOINED match:soccer:118854621 in 145µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118854624
+[info] JOINED match:soccer:118854624 in 101µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118854605
+[info] JOINED match:soccer:118854605 in 140µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118854616
+[info] JOINED match:soccer:118854616 in 99µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118861841
+[info] JOINED match:soccer:118861841 in 140µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118861833
+[info] JOINED match:soccer:118861833 in 120µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118857881
+[info] JOINED match:soccer:118857881 in 167µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118849346
+[info] JOINED match:soccer:118849346 in 109µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118810538
+[info] JOINED match:soccer:118810538 in 100µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118810526
+[info] JOINED match:soccer:118810526 in 141µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118810512
+[info] JOINED match:soccer:118810512 in 131µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118869867
+[info] JOINED match:soccer:118869867 in 129µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118814198
+[info] JOINED match:soccer:118814198 in 102µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822162
+[info] JOINED match:soccer:118822162 in 148µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822411
+[info] JOINED match:soccer:118822411 in 151µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822340
+[info] JOINED match:soccer:118822340 in 166µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822385
+[info] JOINED match:soccer:118822385 in 126µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822360
+[info] JOINED match:soccer:118822360 in 162µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118814310
+[info] JOINED match:soccer:118814310 in 118µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118814217
+[info] JOINED match:soccer:118814217 in 123µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118814265
+[info] JOINED match:soccer:118814265 in 133µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118814364
+[info] JOINED match:soccer:118814364 in 141µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118814299
+[info] JOINED match:soccer:118814299 in 128µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118814341
+[info] JOINED match:soccer:118814341 in 151µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118814399
+[info] JOINED match:soccer:118814399 in 107µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118810511
+[info] JOINED match:soccer:118810511 in 153µs
+  Parameters: %{}
+[info] GET /api/market-name/soccer/1777
+[debug] Processing with SportsbookWeb.ApiController.market_name/2
+  Parameters: %{"market_id" => "1777", "sport" => "soccer"}
+  Pipelines: [:api]
+[info] Sent 200 in 34ms
+[info] Client connecting to socket with params: %{"userToken" => "anonymous", "vsn" => "2.0.0"}
+[info] CONNECTED TO SportsbookWeb.UserSocket in 200µs
+  Transport: :websocket
+  Serializer: Phoenix.Socket.V2.JSONSerializer
+  Parameters: %{"userToken" => "anonymous", "vsn" => "2.0.0"}
+[info] Client subscribed to specific match: soccer:118822324
+[info] JOINED match:soccer:118822324 in 191µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822214
+[info] JOINED match:soccer:118822214 in 173µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822197
+[info] JOINED match:soccer:118822197 in 113µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822242
+[info] JOINED match:soccer:118822242 in 163µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822169
+[info] JOINED match:soccer:118822169 in 102µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822262
+[info] JOINED match:soccer:118822262 in 136µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822226
+[info] JOINED match:soccer:118822226 in 149µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822281
+[info] JOINED match:soccer:118822281 in 123µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118810983
+[info] JOINED match:soccer:118810983 in 95µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118775106
+[info] JOINED match:soccer:118775106 in 110µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118825313
+[info] JOINED match:soccer:118825313 in 133µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118825324
+[info] JOINED match:soccer:118825324 in 96µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118825310
+[info] JOINED match:soccer:118825310 in 127µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118825308
+[info] JOINED match:soccer:118825308 in 88µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118844052
+[info] JOINED match:soccer:118844052 in 88µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118844048
+[info] JOINED match:soccer:118844048 in 83µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118841569
+[info] JOINED match:soccer:118841569 in 98µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118841557
+[info] JOINED match:soccer:118841557 in 73µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118841571
+[info] JOINED match:soccer:118841571 in 102µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118821948
+[info] JOINED match:soccer:118821948 in 86µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118821261
+[info] JOINED match:soccer:118821261 in 86µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118821255
+[info] JOINED match:soccer:118821255 in 113µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118821272
+[info] JOINED match:soccer:118821272 in 77µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118842449
+[info] JOINED match:soccer:118842449 in 95µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118813740
+[info] JOINED match:soccer:118813740 in 112µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118813737
+[info] JOINED match:soccer:118813737 in 107µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118813602
+[info] JOINED match:soccer:118813602 in 100µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118813710
+[info] JOINED match:soccer:118813710 in 167µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118813680
+[info] JOINED match:soccer:118813680 in 172µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118813714
+[info] JOINED match:soccer:118813714 in 131µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118813661
+[info] JOINED match:soccer:118813661 in 106µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118813632
+[info] JOINED match:soccer:118813632 in 121µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118813635
+[info] JOINED match:soccer:118813635 in 166µs
+  Parameters: %{}
+[info] Client connecting to socket with params: %{"userToken" => "anonymous", "vsn" => "2.0.0"}
+[info] CONNECTED TO SportsbookWeb.UserSocket in 199µs
+  Transport: :websocket
+  Serializer: Phoenix.Socket.V2.JSONSerializer
+  Parameters: %{"userToken" => "anonymous", "vsn" => "2.0.0"}
+[info] Client subscribed to specific match: soccer:118810477
+[info] JOINED match:soccer:118810477 in 224µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118821453
+[info] JOINED match:soccer:118821453 in 144µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118811892
+[info] JOINED match:soccer:118811892 in 110µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118811888
+[info] JOINED match:soccer:118811888 in 111µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118870514
+[info] JOINED match:soccer:118870514 in 146µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118808847
+[info] JOINED match:soccer:118808847 in 152µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118821470
+[info] JOINED match:soccer:118821470 in 110µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118811909
+[info] JOINED match:soccer:118811909 in 113µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118811906
+[info] JOINED match:soccer:118811906 in 171µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118815035
+[info] JOINED match:soccer:118815035 in 119µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118811910
+[info] JOINED match:soccer:118811910 in 151µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822153
+[info] JOINED match:soccer:118822153 in 118µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822607
+[info] JOINED match:soccer:118822607 in 110µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822583
+[info] JOINED match:soccer:118822583 in 128µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822580
+[info] JOINED match:soccer:118822580 in 113µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118854587
+[info] JOINED match:soccer:118854587 in 123µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118854588
+[info] JOINED match:soccer:118854588 in 99µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118854621
+[info] JOINED match:soccer:118854621 in 170µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118854624
+[info] JOINED match:soccer:118854624 in 130µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118854605
+[info] JOINED match:soccer:118854605 in 107µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118854616
+[info] JOINED match:soccer:118854616 in 107µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118861841
+[info] JOINED match:soccer:118861841 in 128µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118861833
+[info] JOINED match:soccer:118861833 in 127µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118854593
+[info] JOINED match:soccer:118854593 in 169µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118857881
+[info] JOINED match:soccer:118857881 in 123µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118849346
+[info] JOINED match:soccer:118849346 in 123µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118810538
+[info] JOINED match:soccer:118810538 in 162µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118810526
+[info] JOINED match:soccer:118810526 in 121µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118810512
+[info] JOINED match:soccer:118810512 in 120µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118869867
+[info] JOINED match:soccer:118869867 in 96µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118814198
+[info] JOINED match:soccer:118814198 in 120µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822162
+[info] JOINED match:soccer:118822162 in 125µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822411
+[info] JOINED match:soccer:118822411 in 130µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822340
+[info] JOINED match:soccer:118822340 in 111µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822385
+[info] JOINED match:soccer:118822385 in 108µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822360
+[info] JOINED match:soccer:118822360 in 81µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118814310
+[info] JOINED match:soccer:118814310 in 113µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118814217
+[info] JOINED match:soccer:118814217 in 127µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118814265
+[info] JOINED match:soccer:118814265 in 163µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118814364
+[info] JOINED match:soccer:118814364 in 118µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118814299
+[info] JOINED match:soccer:118814299 in 140µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118814341
+[info] JOINED match:soccer:118814341 in 128µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118814399
+[info] JOINED match:soccer:118814399 in 124µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118810511
+[info] JOINED match:soccer:118810511 in 124µs
+  Parameters: %{}
+[info] Client subscribed to detailed match data: soccer:118821453
+[info] JOINED match_details:soccer:118821453 in 141µs
+  Parameters: %{}
+[info] Client connecting to socket with params: %{"userToken" => "anonymous", "vsn" => "2.0.0"}
+[info] CONNECTED TO SportsbookWeb.UserSocket in 166µs
+  Transport: :websocket
+  Serializer: Phoenix.Socket.V2.JSONSerializer
+  Parameters: %{"userToken" => "anonymous", "vsn" => "2.0.0"}
+[info] Client subscribed to specific match: soccer:118810477
+[info] JOINED match:soccer:118810477 in 196µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118821453
+[info] JOINED match:soccer:118821453 in 150µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118811892
+[info] JOINED match:soccer:118811892 in 127µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118811888
+[info] JOINED match:soccer:118811888 in 140µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118808847
+[info] JOINED match:soccer:118808847 in 148µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118821470
+[info] JOINED match:soccer:118821470 in 141µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118811909
+[info] JOINED match:soccer:118811909 in 149µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118811906
+[info] JOINED match:soccer:118811906 in 132µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118815035
+[info] JOINED match:soccer:118815035 in 92µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118811910
+[info] JOINED match:soccer:118811910 in 119µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822607
+[info] JOINED match:soccer:118822607 in 138µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118822580
+[info] JOINED match:soccer:118822580 in 122µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118854587
+[info] JOINED match:soccer:118854587 in 176µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118854588
+[info] JOINED match:soccer:118854588 in 148µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118854586
+[info] JOINED match:soccer:118854586 in 186µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118854584
+[info] JOINED match:soccer:118854584 in 142µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118854554
+[info] JOINED match:soccer:118854554 in 191µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118854563
+[info] JOINED match:soccer:118854563 in 122µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118861841
+[info] JOINED match:soccer:118861841 in 116µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118861833
+[info] JOINED match:soccer:118861833 in 109µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118854580
+[info] JOINED match:soccer:118854580 in 113µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118854593
+[info] JOINED match:soccer:118854593 in 159µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118849346
+[info] JOINED match:soccer:118849346 in 150µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118810538
+[info] JOINED match:soccer:118810538 in 125µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118810526
+[info] JOINED match:soccer:118810526 in 153µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118810512
+[info] JOINED match:soccer:118810512 in 115µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118869867
+[info] JOINED match:soccer:118869867 in 170µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118814198
+[info] JOINED match:soccer:118814198 in 193µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118814310
+[info] JOINED match:soccer:118814310 in 110µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118814217
+[info] JOINED match:soccer:118814217 in 179µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118814265
+[info] JOINED match:soccer:118814265 in 169µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118814364
+[info] JOINED match:soccer:118814364 in 190µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118814299
+[info] JOINED match:soccer:118814299 in 126µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118814341
+[info] JOINED match:soccer:118814341 in 149µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118814399
+[info] JOINED match:soccer:118814399 in 111µs
+  Parameters: %{}
+[info] Client subscribed to specific match: soccer:118810511
+[info] JOINED match:soccer:118810511 in 194µs
+  Parameters: %{}
+[info] Client subscribed to detailed match data: soccer:118821453
+[info] JOINED match_details:soccer:118821453 in 175µs
+  Parameters: %{}
+[info] GET /api/market-name/soccer/1777
+[debug] Processing with SportsbookWeb.ApiController.market_name/2
+  Parameters: %{"market_id" => "1777", "sport" => "soccer"}
+  Pipelines: [:api]
+[info] Sent 200 in 198µs
+[info] GET /api/market-name/soccer/12
+[debug] Processing with SportsbookWeb.ApiController.market_name/2
+  Parameters: %{"market_id" => "12", "sport" => "soccer"}
+  Pipelines: [:api]
+[info] Sent 200 in 206µs
+[info] GET /api/market-name/basket/180032
+[debug] Processing with SportsbookWeb.ApiController.market_name/2
+  Parameters: %{"market_id" => "180032", "sport" => "basket"}
+  Pipelines: [:api]
+[info] Sent 200 in 472µs
+[info] GET /api/market-name/tennis/200001
+[debug] Processing with SportsbookWeb.ApiController.market_name/2
+  Parameters: %{"market_id" => "200001", "sport" => "tennis"}
+  Pipelines: [:api]
+[info] Sent 200 in 340µs
+[info] GET /api/markets/soccer
+[debug] Processing with SportsbookWeb.ApiController.markets/2
+  Parameters: %{"sport" => "soccer"}
+  Pipelines: [:api]
+[info] Sent 200 in 587µs
+Compiling 1 file (.ex)
+Generated sportsbook app
+[info] GET /
+[debug] Processing with SportsbookWeb.PageController.react_app/2
+  Parameters: %{}
+  Pipelines: [:browser]
+[info] Sent 200 in 15ms
+[info] GET /static/css/main.94decdb3.css
+[info] GET /static/js/main.51b16b9a.js
+[debug] ** (Phoenix.Router.NoRouteError) no route found for GET /static/js/main.51b16b9a.js (SportsbookWeb.Router)
+    (sportsbook 0.1.0) deps/phoenix/lib/phoenix/router.ex:541: SportsbookWeb.Router.call/2
+    (sportsbook 0.1.0) lib/sportsbook_web/endpoint.ex:1: SportsbookWeb.Endpoint.plug_builder_call/2
+    (sportsbook 0.1.0) deps/plug/lib/plug/debugger.ex:155: SportsbookWeb.Endpoint."call (overridable 3)"/2
+    (sportsbook 0.1.0) lib/sportsbook_web/endpoint.ex:1: SportsbookWeb.Endpoint.call/2
+    (phoenix 1.7.21) lib/phoenix/endpoint/sync_code_reload_plug.ex:22: Phoenix.Endpoint.SyncCodeReloadPlug.do_call/4
+    (bandit 1.6.11) lib/bandit/pipeline.ex:130: Bandit.Pipeline.call_plug!/2
+    (bandit 1.6.11) lib/bandit/pipeline.ex:40: Bandit.Pipeline.run/4
+    (bandit 1.6.11) lib/bandit/http1/handler.ex:12: Bandit.HTTP1.Handler.handle_data/3
+    (bandit 1.6.11) lib/bandit/delegating_handler.ex:18: Bandit.DelegatingHandler.handle_data/3
+    (bandit 1.6.11) lib/bandit/delegating_handler.ex:8: Bandit.DelegatingHandler.handle_continue/2
+    (stdlib 6.1.1) gen_server.erl:2335: :gen_server.try_handle_continue/3
+    (stdlib 6.1.1) gen_server.erl:2244: :gen_server.loop/7
+    (stdlib 6.1.1) proc_lib.erl:329: :proc_lib.init_p_do_apply/3
+
+[debug] ** (Phoenix.Router.NoRouteError) no route found for GET /static/css/main.94decdb3.css (SportsbookWeb.Router)
+    (sportsbook 0.1.0) deps/phoenix/lib/phoenix/router.ex:541: SportsbookWeb.Router.call/2
+    (sportsbook 0.1.0) lib/sportsbook_web/endpoint.ex:1: SportsbookWeb.Endpoint.plug_builder_call/2
+    (sportsbook 0.1.0) deps/plug/lib/plug/debugger.ex:155: SportsbookWeb.Endpoint."call (overridable 3)"/2
+    (sportsbook 0.1.0) lib/sportsbook_web/endpoint.ex:1: SportsbookWeb.Endpoint.call/2
+    (phoenix 1.7.21) lib/phoenix/endpoint/sync_code_reload_plug.ex:22: Phoenix.Endpoint.SyncCodeReloadPlug.do_call/4
+    (bandit 1.6.11) lib/bandit/pipeline.ex:130: Bandit.Pipeline.call_plug!/2
+    (bandit 1.6.11) lib/bandit/pipeline.ex:40: Bandit.Pipeline.run/4
+    (bandit 1.6.11) lib/bandit/http1/handler.ex:12: Bandit.HTTP1.Handler.handle_data/3
+    (bandit 1.6.11) lib/bandit/delegating_handler.ex:18: Bandit.DelegatingHandler.handle_data/3
+    (bandit 1.6.11) lib/bandit/delegating_handler.ex:8: Bandit.DelegatingHandler.handle_continue/2
+    (stdlib 6.1.1) gen_server.erl:2335: :gen_server.try_handle_continue/3
+    (stdlib 6.1.1) gen_server.erl:2244: :gen_server.loop/7
+    (stdlib 6.1.1) proc_lib.erl:329: :proc_lib.init_p_do_apply/3
+
+[info] GET /static/css/main.94decdb3.css
+[debug] ** (Phoenix.Router.NoRouteError) no route found for GET /static/css/main.94decdb3.css (SportsbookWeb.Router)
+    (sportsbook 0.1.0) deps/phoenix/lib/phoenix/router.ex:541: SportsbookWeb.Router.call/2
+    (sportsbook 0.1.0) lib/sportsbook_web/endpoint.ex:1: SportsbookWeb.Endpoint.plug_builder_call/2
+    (sportsbook 0.1.0) deps/plug/lib/plug/debugger.ex:155: SportsbookWeb.Endpoint."call (overridable 3)"/2
+    (sportsbook 0.1.0) lib/sportsbook_web/endpoint.ex:1: SportsbookWeb.Endpoint.call/2
+    (phoenix 1.7.21) lib/phoenix/endpoint/sync_code_reload_plug.ex:22: Phoenix.Endpoint.SyncCodeReloadPlug.do_call/4
+    (bandit 1.6.11) lib/bandit/pipeline.ex:130: Bandit.Pipeline.call_plug!/2
+    (bandit 1.6.11) lib/bandit/pipeline.ex:40: Bandit.Pipeline.run/4
+    (bandit 1.6.11) lib/bandit/http1/handler.ex:12: Bandit.HTTP1.Handler.handle_data/3
+    (bandit 1.6.11) lib/bandit/delegating_handler.ex:18: Bandit.DelegatingHandler.handle_data/3
+    (bandit 1.6.11) lib/bandit/delegating_handler.ex:8: Bandit.DelegatingHandler.handle_continue/2
+    (stdlib 6.1.1) gen_server.erl:2335: :gen_server.try_handle_continue/3
+    (stdlib 6.1.1) gen_server.erl:2244: :gen_server.loop/7
+    (stdlib 6.1.1) proc_lib.erl:329: :proc_lib.init_p_do_apply/3
+
+[info] GET /
+[debug] Processing with SportsbookWeb.PageController.react_app/2
+  Parameters: %{}
+  Pipelines: [:browser]
+[info] Sent 200 in 596µs
+[info] GET /static/css/main.94decdb3.css
+[debug] ** (Phoenix.Router.NoRouteError) no route found for GET /static/css/main.94decdb3.css (SportsbookWeb.Router)
+    (sportsbook 0.1.0) deps/phoenix/lib/phoenix/router.ex:541: SportsbookWeb.Router.call/2
+    (sportsbook 0.1.0) lib/sportsbook_web/endpoint.ex:1: SportsbookWeb.Endpoint.plug_builder_call/2
+    (sportsbook 0.1.0) deps/plug/lib/plug/debugger.ex:155: SportsbookWeb.Endpoint."call (overridable 3)"/2
+    (sportsbook 0.1.0) lib/sportsbook_web/endpoint.ex:1: SportsbookWeb.Endpoint.call/2
+    (phoenix 1.7.21) lib/phoenix/endpoint/sync_code_reload_plug.ex:22: Phoenix.Endpoint.SyncCodeReloadPlug.do_call/4
+    (bandit 1.6.11) lib/bandit/pipeline.ex:130: Bandit.Pipeline.call_plug!/2
+    (bandit 1.6.11) lib/bandit/pipeline.ex:40: Bandit.Pipeline.run/4
+    (bandit 1.6.11) lib/bandit/http1/handler.ex:12: Bandit.HTTP1.Handler.handle_data/3
+    (bandit 1.6.11) lib/bandit/delegating_handler.ex:18: Bandit.DelegatingHandler.handle_data/3
+    (bandit 1.6.11) lib/bandit/delegating_handler.ex:8: Bandit.DelegatingHandler.handle_continue/2
+    (stdlib 6.1.1) gen_server.erl:2335: :gen_server.try_handle_continue/3
+    (stdlib 6.1.1) gen_server.erl:2244: :gen_server.loop/7
+    (stdlib 6.1.1) proc_lib.erl:329: :proc_lib.init_p_do_apply/3
+
+[info] GET /static/js/main.51b16b9a.js
+[debug] ** (Phoenix.Router.NoRouteError) no route found for GET /static/js/main.51b16b9a.js (SportsbookWeb.Router)
+    (sportsbook 0.1.0) deps/phoenix/lib/phoenix/router.ex:541: SportsbookWeb.Router.call/2
+    (sportsbook 0.1.0) lib/sportsbook_web/endpoint.ex:1: SportsbookWeb.Endpoint.plug_builder_call/2
+    (sportsbook 0.1.0) deps/plug/lib/plug/debugger.ex:155: SportsbookWeb.Endpoint."call (overridable 3)"/2
+    (sportsbook 0.1.0) lib/sportsbook_web/endpoint.ex:1: SportsbookWeb.Endpoint.call/2
+    (phoenix 1.7.21) lib/phoenix/endpoint/sync_code_reload_plug.ex:22: Phoenix.Endpoint.SyncCodeReloadPlug.do_call/4
+    (bandit 1.6.11) lib/bandit/pipeline.ex:130: Bandit.Pipeline.call_plug!/2
+    (bandit 1.6.11) lib/bandit/pipeline.ex:40: Bandit.Pipeline.run/4
+    (bandit 1.6.11) lib/bandit/http1/handler.ex:12: Bandit.HTTP1.Handler.handle_data/3
+    (bandit 1.6.11) lib/bandit/delegating_handler.ex:18: Bandit.DelegatingHandler.handle_data/3
+    (bandit 1.6.11) lib/bandit/delegating_handler.ex:8: Bandit.DelegatingHandler.handle_continue/2
+    (stdlib 6.1.1) gen_server.erl:2335: :gen_server.try_handle_continue/3
+    (stdlib 6.1.1) gen_server.erl:2244: :gen_server.loop/7
+    (stdlib 6.1.1) proc_lib.erl:329: :proc_lib.init_p_do_apply/3
+
+[info] GET /
+[debug] Processing with SportsbookWeb.PageController.react_app/2
+  Parameters: %{}
+  Pipelines: [:browser]
+[info] Sent 200 in 502µs
+[info] GET /static/css/main.94decdb3.css
+[info] GET /static/js/main.51b16b9a.js
+[debug] ** (Phoenix.Router.NoRouteError) no route found for GET /static/css/main.94decdb3.css (SportsbookWeb.Router)
+    (sportsbook 0.1.0) deps/phoenix/lib/phoenix/router.ex:541: SportsbookWeb.Router.call/2
+    (sportsbook 0.1.0) lib/sportsbook_web/endpoint.ex:1: SportsbookWeb.Endpoint.plug_builder_call/2
+    (sportsbook 0.1.0) deps/plug/lib/plug/debugger.ex:155: SportsbookWeb.Endpoint."call (overridable 3)"/2
+    (sportsbook 0.1.0) lib/sportsbook_web/endpoint.ex:1: SportsbookWeb.Endpoint.call/2
+    (phoenix 1.7.21) lib/phoenix/endpoint/sync_code_reload_plug.ex:22: Phoenix.Endpoint.SyncCodeReloadPlug.do_call/4
+    (bandit 1.6.11) lib/bandit/pipeline.ex:130: Bandit.Pipeline.call_plug!/2
+    (bandit 1.6.11) lib/bandit/pipeline.ex:40: Bandit.Pipeline.run/4
+    (bandit 1.6.11) lib/bandit/http1/handler.ex:12: Bandit.HTTP1.Handler.handle_data/3
+    (bandit 1.6.11) lib/bandit/delegating_handler.ex:18: Bandit.DelegatingHandler.handle_data/3
+    (bandit 1.6.11) lib/bandit/delegating_handler.ex:8: Bandit.DelegatingHandler.handle_continue/2
+    (stdlib 6.1.1) gen_server.erl:2335: :gen_server.try_handle_continue/3
+    (stdlib 6.1.1) gen_server.erl:2244: :gen_server.loop/7
+    (stdlib 6.1.1) proc_lib.erl:329: :proc_lib.init_p_do_apply/3
+
+[debug] ** (Phoenix.Router.NoRouteError) no route found for GET /static/js/main.51b16b9a.js (SportsbookWeb.Router)
+    (sportsbook 0.1.0) deps/phoenix/lib/phoenix/router.ex:541: SportsbookWeb.Router.call/2
+    (sportsbook 0.1.0) lib/sportsbook_web/endpoint.ex:1: SportsbookWeb.Endpoint.plug_builder_call/2
+    (sportsbook 0.1.0) deps/plug/lib/plug/debugger.ex:155: SportsbookWeb.Endpoint."call (overridable 3)"/2
+    (sportsbook 0.1.0) lib/sportsbook_web/endpoint.ex:1: SportsbookWeb.Endpoint.call/2
+    (phoenix 1.7.21) lib/phoenix/endpoint/sync_code_reload_plug.ex:22: Phoenix.Endpoint.SyncCodeReloadPlug.do_call/4
+    (bandit 1.6.11) lib/bandit/pipeline.ex:130: Bandit.Pipeline.call_plug!/2
+    (bandit 1.6.11) lib/bandit/pipeline.ex:40: Bandit.Pipeline.run/4
+    (bandit 1.6.11) lib/bandit/http1/handler.ex:12: Bandit.HTTP1.Handler.handle_data/3
+    (bandit 1.6.11) lib/bandit/delegating_handler.ex:18: Bandit.DelegatingHandler.handle_data/3
+    (bandit 1.6.11) lib/bandit/delegating_handler.ex:8: Bandit.DelegatingHandler.handle_continue/2
+    (stdlib 6.1.1) gen_server.erl:2335: :gen_server.try_handle_continue/3
+    (stdlib 6.1.1) gen_server.erl:2244: :gen_server.loop/7
+    (stdlib 6.1.1) proc_lib.erl:329: :proc_lib.init_p_do_apply/3
+
+[notice] SIGTERM received - shutting down
+
+[info] DRAINING 115 of 115 total connection(s) for socket SportsbookWeb.UserSocket every 2000ms - round 1 of 1

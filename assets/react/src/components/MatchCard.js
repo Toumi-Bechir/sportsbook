@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function MatchCard({ 
   match, 
@@ -6,9 +7,12 @@ function MatchCard({
   formatTime, 
   isExpanded, 
   onToggle, 
-  fullMatchData 
+  fullMatchData,
+  marketDictionary,
+  matchEventsDictionary 
 }) {
   const { data } = match;
+  const navigate = useNavigate();
 
   const getScore = () => {
     if (!data) return '0-0';
@@ -104,48 +108,54 @@ function MatchCard({
         return [
           { label: 'Ball Position', value: data.xy || 'N/A' },
           { label: 'Corners', value: data.corners ? `${data.corners[0]}-${data.corners[1]}` : 'N/A' },
-          { label: 'Yellow Cards', value: data.yellow_cards ? `${data.yellow_cards[0]}-${data.yellow_cards[1]}` : 'N/A' }
+          { label: 'Match Events', value: getMatchEventName(data.sc) }
         ];
       
       case 'basket':
         return [
           { label: 'Q1', value: data.quarter_scores?.Q1 ? `${data.quarter_scores.Q1[0]}-${data.quarter_scores.Q1[1]}` : 'N/A' },
           { label: 'Q2', value: data.quarter_scores?.Q2 ? `${data.quarter_scores.Q2[0]}-${data.quarter_scores.Q2[1]}` : 'N/A' },
-          { label: 'Q3', value: data.quarter_scores?.Q3 ? `${data.quarter_scores.Q3[0]}-${data.quarter_scores.Q3[1]}` : 'N/A' }
+          { label: 'Q3', value: data.quarter_scores?.Q3 ? `${data.quarter_scores.Q3[0]}-${data.quarter_scores.Q3[1]}` : 'N/A' },
+          { label: 'Match Events', value: getMatchEventName(data.sc) }
         ];
       
       case 'tennis':
         return [
           { label: 'Server', value: data.current_server || 'N/A' },
-          { label: 'Current Game', value: data.current_game || 'N/A' }
+          { label: 'Current Game', value: data.current_game || 'N/A' },
+          { label: 'Match Events', value: getMatchEventName(data.sc) }
         ];
       
       case 'baseball':
         return [
           { label: 'At Bat', value: data.current?.AtBat || 'N/A' },
           { label: 'Outs', value: data.current?.Outs !== undefined ? data.current.Outs : 'N/A' },
-          { label: 'Pitcher', value: data.current?.Pitcher || 'N/A' }
+          { label: 'Pitcher', value: data.current?.Pitcher || 'N/A' },
+          { label: 'Match Events', value: getMatchEventName(data.sc) }
         ];
       
       case 'amfootball':
         return [
           { label: 'Down', value: data.current?.Down || 'N/A' },
           { label: 'To Go', value: data.current?.ToGo ? `${data.current.ToGo} yds` : 'N/A' },
-          { label: 'Yard Line', value: data.current?.YardLine || 'N/A' }
+          { label: 'Yard Line', value: data.current?.YardLine || 'N/A' },
+          { label: 'Match Events', value: getMatchEventName(data.sc) }
         ];
       
       case 'hockey':
         return [
           { label: 'Situation', value: data.current?.Situation || 'N/A' },
           { label: 'Time Left', value: data.current?.Time || 'N/A' },
-          { label: 'Shots on Goal', value: data.shots ? `${data.shots[0]}-${data.shots[1]}` : 'N/A' }
+          { label: 'Shots on Goal', value: data.shots ? `${data.shots[0]}-${data.shots[1]}` : 'N/A' },
+          { label: 'Match Events', value: getMatchEventName(data.sc) }
         ];
       
       case 'volleyball':
         return [
           { label: 'Server', value: data.current?.Server || 'N/A' },
           { label: 'Current Set', value: data.current?.Set || 'N/A' },
-          { label: 'Set Score', value: data.current?.Score || 'N/A' }
+          { label: 'Set Score', value: data.current?.Score || 'N/A' },
+          { label: 'Match Events', value: getMatchEventName(data.sc) }
         ];
       
       default:
@@ -166,7 +176,7 @@ function MatchCard({
             <div key={index} className="market-card">
               <div className="market-header">
                 <h5 className="market-name">
-                  {getMarketName(market.id)} 
+                  {getMarketName(market.id)} <span className="market-id">(ID: {market.id})</span>
                   {market.ha && <span className="handicap">({market.ha})</span>}
                 </h5>
               </div>
@@ -194,21 +204,28 @@ function MatchCard({
   };
 
   const getMarketName = (marketId) => {
-    const marketNames = {
-      27: '1X2 (Full Time)',
-      2: 'Over/Under',
-      12: 'Asian Handicap',
-      1777: 'Double Chance',
-      10115: 'Draw No Bet',
-      227: 'Correct Score',
-      113: 'Odd/Even',
-      317: 'Both Teams to Score',
-      421: 'Total Goals',
-      2000: 'Half Time/Full Time',
-      1450: 'Total Points',
-      1446: 'Point Spread'
-    };
-    return marketNames[marketId] || `Market ${marketId}`;
+    // Simple lookup in the cached dictionary
+    return marketDictionary[marketId] || `Market ${marketId}`;
+  };
+
+  const getMatchEventName = (eventCode) => {
+    // Simple lookup in the cached match events dictionary
+    if (!eventCode) return 'No Event';
+    
+    // Convert string to number if needed
+    const code = typeof eventCode === 'string' ? parseInt(eventCode, 10) : eventCode;
+    let eventName = matchEventsDictionary[code] || `Event ${eventCode}`;
+    
+    // Replace generic team references with actual team names
+    if (data?.t1?.name && data?.t2?.name) {
+      eventName = eventName
+        .replace(/Home Team/g, data.t1.name)
+        .replace(/Home/g, data.t1.name)
+        .replace(/Away Team/g, data.t2.name)
+        .replace(/Away/g, data.t2.name);
+    }
+    
+    return eventName;
   };
 
   const isLive = data?.time > 0;
@@ -217,7 +234,7 @@ function MatchCard({
     <div className="match-card">
       {isLive && <div className="live-indicator">Live</div>}
       
-      <div className="match-header" onClick={onToggle}>
+      <div className="match-header" onClick={() => navigate(`/match/${sport}/${match.id}`)}>
         <div className="teams">
           <div className="team-names">
             {data?.t1?.name || 'Team 1'} vs {data?.t2?.name || 'Team 2'}
@@ -236,6 +253,7 @@ function MatchCard({
             className={`toggle-button ${isExpanded ? 'expanded' : ''}`}
             onClick={(e) => {
               e.stopPropagation();
+              e.preventDefault();
               onToggle();
             }}
           >
@@ -251,10 +269,6 @@ function MatchCard({
             <div className="detail-value">{detail.value}</div>
           </div>
         ))}
-        <div className="detail-item">
-          <div className="detail-label">Updated</div>
-          <div className="detail-value">{data?.updated_at || 'Unknown'}</div>
-        </div>
       </div>
 
       {isExpanded && (

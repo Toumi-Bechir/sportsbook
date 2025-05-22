@@ -246,7 +246,8 @@ defmodule Sportsbook.Storage.MatchStore do
       "time" => updt_frame["et"],
       "period" => updt_frame["pc"],
       "updated_at" => updt_frame["uptd"],
-      "league" => updt_frame["ctry_name"] || "Unknown League"
+      "league" => updt_frame["ctry_name"] || "Unknown League",
+      "sc" => updt_frame["sc"]  # Match events/status code
     }
     
     # Add sport-specific score data

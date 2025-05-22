@@ -16,6 +16,12 @@ function App() {
   const [expandedMatch, setExpandedMatch] = useState(null);
   const [fullMatchData, setFullMatchData] = useState({});
   
+  // Market dictionaries cache
+  const [marketDictionaries, setMarketDictionaries] = useState({});
+  
+  // Match events dictionaries cache
+  const [matchEventsDictionaries, setMatchEventsDictionaries] = useState({});
+  
   // Keep track of active match subscriptions
   const matchChannelsRef = useRef(new Map());
   const detailChannelRef = useRef(null);
@@ -63,6 +69,53 @@ function App() {
         console.error('Error fetching sports:', error);
       });
   }, []);
+
+  // Fetch market dictionary and match events when sport changes
+  useEffect(() => {
+    if (!selectedSport) return;
+    
+    // Check if we already have both dictionaries for this sport
+    if (marketDictionaries[selectedSport] && matchEventsDictionaries[selectedSport]) {
+      console.log(`Dictionaries for ${selectedSport} already cached`);
+      return;
+    }
+
+    console.log(`Fetching dictionaries for ${selectedSport}`);
+    fetch(`/api/markets/${selectedSport}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.markets) {
+          // Convert markets array to map for faster lookups
+          const marketMap = {};
+          data.markets.forEach(market => {
+            marketMap[market.id] = market.name;
+          });
+          
+          setMarketDictionaries(prev => ({
+            ...prev,
+            [selectedSport]: marketMap
+          }));
+          console.log(`Cached ${data.markets.length} markets for ${selectedSport}`);
+        }
+
+        if (data.match_events) {
+          // Convert match events array to map for faster lookups
+          const eventsMap = {};
+          data.match_events.forEach(event => {
+            eventsMap[event.code] = event.name;
+          });
+          
+          setMatchEventsDictionaries(prev => ({
+            ...prev,
+            [selectedSport]: eventsMap
+          }));
+          console.log(`Cached ${data.match_events.length} match events for ${selectedSport}`);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching dictionaries:', error);
+      });
+  }, [selectedSport, marketDictionaries, matchEventsDictionaries]);
 
   // Fetch initial matches when sport changes
   useEffect(() => {
@@ -288,6 +341,8 @@ function App() {
             expandedMatch={expandedMatch}
             onToggleMatch={handleToggleMatch}
             fullMatchData={fullMatchData}
+            marketDictionary={marketDictionaries[selectedSport] || {}}
+            matchEventsDictionary={matchEventsDictionaries[selectedSport] || {}}
           />
         </div>
       </main>

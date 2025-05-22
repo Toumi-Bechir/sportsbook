@@ -18,7 +18,7 @@ defmodule Sportsbook.Application do
       # Start the Finch HTTP client for API requests and emails
       {Finch, name: Sportsbook.Finch},
       # Start the token client for API authentication
-      #Sportsbook.API.TokenClient,
+      Sportsbook.API.TokenClient,
       # Start the websocket clients for different sports
       {Sportsbook.API.WebsocketSupervisor, []},
       # Start a worker by calling: Sportsbook.Worker.start_link(arg)

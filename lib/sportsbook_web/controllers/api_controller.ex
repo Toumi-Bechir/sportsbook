@@ -34,7 +34,56 @@ defmodule SportsbookWeb.ApiController do
     json(conn, %{sports: sports_with_counts})
   end
 
+  def market_name(conn, %{"sport" => sport, "market_id" => market_id}) do
+    market_name = case Integer.parse(market_id) do
+      {id, ""} -> get_market_name_for_sport(sport, id)
+      _ -> "Invalid Market ID"
+    end
+    
+    json(conn, %{
+      sport: sport,
+      market_id: market_id,
+      market_name: market_name
+    })
+  end
+
+  def markets(conn, %{"sport" => sport}) do
+    sport_atom = String.to_existing_atom(sport)
+    markets = Sportsbook.MarketDictionaries.get_all_markets(sport_atom)
+    match_events = Sportsbook.StateDictionaries.get_all_match_events(sport_atom)
+    
+    markets_list = Enum.map(markets, fn {id, name} ->
+      %{id: id, name: name}
+    end)
+    
+    match_events_list = Enum.map(match_events, fn {code, name} ->
+      %{code: code, name: name}
+    end)
+    
+    json(conn, %{
+      sport: sport,
+      markets: markets_list,
+      match_events: match_events_list
+    })
+  rescue
+    ArgumentError ->
+      json(conn, %{error: "Unknown sport: #{sport}"})
+  end
+
   # Private helper functions
+
+  defp get_market_name_for_sport(sport, market_id) do
+    case sport do
+      "soccer" -> Sportsbook.MarketDictionaries.get_soccer_market_name(market_id)
+      "basket" -> Sportsbook.MarketDictionaries.get_basket_market_name(market_id)
+      "tennis" -> Sportsbook.MarketDictionaries.get_tennis_market_name(market_id)
+      "baseball" -> Sportsbook.MarketDictionaries.get_baseball_market_name(market_id)
+      "hockey" -> Sportsbook.MarketDictionaries.get_hockey_market_name(market_id)
+      "volleyball" -> Sportsbook.MarketDictionaries.get_volleyball_market_name(market_id)
+      "amfootball" -> Sportsbook.MarketDictionaries.get_amfootball_market_name(market_id)
+      _ -> "Unknown Sport"
+    end
+  end
   
   defp group_matches_by_league(matches) do
     matches
