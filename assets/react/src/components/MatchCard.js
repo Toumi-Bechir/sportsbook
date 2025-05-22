@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function MatchCard({ 
@@ -13,6 +13,7 @@ function MatchCard({
 }) {
   const { data } = match;
   const navigate = useNavigate();
+  const [hoveredOdd, setHoveredOdd] = useState(null);
 
   const getScore = () => {
     if (!data) return '0-0';
@@ -54,7 +55,7 @@ function MatchCard({
   };
 
   const getPeriod = () => {
-    if (!data?.period) return 'Unknown';
+    if (!data?.period) return 'Pre-Match';
     
     switch (sport) {
       case 'soccer':
@@ -69,28 +70,28 @@ function MatchCard({
       case 'basket':
       case 'amfootball':
         switch (data.period) {
-          case 1: return '1st Quarter';
-          case 2: return '2nd Quarter';
-          case 3: return '3rd Quarter';
-          case 4: return '4th Quarter';
-          case 5: return 'Overtime';
-          default: return `Quarter ${data.period}`;
+          case 1: return 'Q1';
+          case 2: return 'Q2';
+          case 3: return 'Q3';
+          case 4: return 'Q4';
+          case 5: return 'OT';
+          default: return `Q${data.period}`;
         }
       
       case 'hockey':
         switch (data.period) {
-          case 1: return '1st Period';
-          case 2: return '2nd Period';
-          case 3: return '3rd Period';
-          case 4: return 'Overtime';
-          default: return `Period ${data.period}`;
+          case 1: return 'P1';
+          case 2: return 'P2';
+          case 3: return 'P3';
+          case 4: return 'OT';
+          default: return `P${data.period}`;
         }
       
       case 'tennis':
         return `Set ${data.period}`;
       
       case 'baseball':
-        return `Inning ${data.period}`;
+        return `Inn ${data.period}`;
       
       case 'volleyball':
         return `Set ${data.period}`;
@@ -100,100 +101,167 @@ function MatchCard({
     }
   };
 
-  const getSportSpecificDetails = () => {
-    if (!data) return [];
+  const getQuickStats = () => {
+    if (!data) return null;
     
     switch (sport) {
       case 'soccer':
-        return [
-          { label: 'Ball Position', value: data.xy || 'N/A' },
-          { label: 'Corners', value: data.corners ? `${data.corners[0]}-${data.corners[1]}` : 'N/A' },
-          { label: 'Match Events', value: getMatchEventName(data.sc) }
-        ];
+        return {
+          corners: data.corners ? `${data.corners[0]}-${data.corners[1]}` : null,
+          cards: data.cards ? `${data.cards[0]}-${data.cards[1]}` : null,
+          shots: data.shots ? `${data.shots[0]}-${data.shots[1]}` : null
+        };
       
       case 'basket':
-        return [
-          { label: 'Q1', value: data.quarter_scores?.Q1 ? `${data.quarter_scores.Q1[0]}-${data.quarter_scores.Q1[1]}` : 'N/A' },
-          { label: 'Q2', value: data.quarter_scores?.Q2 ? `${data.quarter_scores.Q2[0]}-${data.quarter_scores.Q2[1]}` : 'N/A' },
-          { label: 'Q3', value: data.quarter_scores?.Q3 ? `${data.quarter_scores.Q3[0]}-${data.quarter_scores.Q3[1]}` : 'N/A' },
-          { label: 'Match Events', value: getMatchEventName(data.sc) }
-        ];
+        return {
+          q1: data.quarter_scores?.Q1 ? `${data.quarter_scores.Q1[0]}-${data.quarter_scores.Q1[1]}` : null,
+          q2: data.quarter_scores?.Q2 ? `${data.quarter_scores.Q2[0]}-${data.quarter_scores.Q2[1]}` : null,
+          fouls: data.fouls ? `${data.fouls[0]}-${data.fouls[1]}` : null
+        };
       
       case 'tennis':
-        return [
-          { label: 'Server', value: data.current_server || 'N/A' },
-          { label: 'Current Game', value: data.current_game || 'N/A' },
-          { label: 'Match Events', value: getMatchEventName(data.sc) }
-        ];
-      
-      case 'baseball':
-        return [
-          { label: 'At Bat', value: data.current?.AtBat || 'N/A' },
-          { label: 'Outs', value: data.current?.Outs !== undefined ? data.current.Outs : 'N/A' },
-          { label: 'Pitcher', value: data.current?.Pitcher || 'N/A' },
-          { label: 'Match Events', value: getMatchEventName(data.sc) }
-        ];
-      
-      case 'amfootball':
-        return [
-          { label: 'Down', value: data.current?.Down || 'N/A' },
-          { label: 'To Go', value: data.current?.ToGo ? `${data.current.ToGo} yds` : 'N/A' },
-          { label: 'Yard Line', value: data.current?.YardLine || 'N/A' },
-          { label: 'Match Events', value: getMatchEventName(data.sc) }
-        ];
-      
-      case 'hockey':
-        return [
-          { label: 'Situation', value: data.current?.Situation || 'N/A' },
-          { label: 'Time Left', value: data.current?.Time || 'N/A' },
-          { label: 'Shots on Goal', value: data.shots ? `${data.shots[0]}-${data.shots[1]}` : 'N/A' },
-          { label: 'Match Events', value: getMatchEventName(data.sc) }
-        ];
-      
-      case 'volleyball':
-        return [
-          { label: 'Server', value: data.current?.Server || 'N/A' },
-          { label: 'Current Set', value: data.current?.Set || 'N/A' },
-          { label: 'Set Score', value: data.current?.Score || 'N/A' },
-          { label: 'Match Events', value: getMatchEventName(data.sc) }
-        ];
+        return {
+          server: data.current_server,
+          game: data.current_game,
+          aces: data.aces ? `${data.aces[0]}-${data.aces[1]}` : null
+        };
       
       default:
-        return [];
+        return null;
     }
+  };
+
+  const renderQuickOdds = () => {
+    // bet365 authentic odds with proper colors
+    const sampleOdds = {
+      soccer: [
+        { name: '1', value: '2.15', type: 'home' },
+        { name: 'X', value: '3.40', type: 'draw' },
+        { name: '2', value: '2.80', type: 'away' },
+        { name: 'O2.5', value: '1.85', type: 'over' },
+        { name: 'U2.5', value: '1.95', type: 'under' },
+        { name: 'BTTS Y', value: '1.70', type: 'btts_yes' }
+      ],
+      basket: [
+        { name: '1', value: '1.95', type: 'home' },
+        { name: '2', value: '1.85', type: 'away' },
+        { name: 'O215.5', value: '1.90', type: 'over' },
+        { name: 'U215.5', value: '1.90', type: 'under' },
+        { name: '+5.5', value: '1.85', type: 'spread_home' },
+        { name: '-5.5', value: '1.95', type: 'spread_away' }
+      ],
+      tennis: [
+        { name: '1', value: '1.65', type: 'home' },
+        { name: '2', value: '2.25', type: 'away' },
+        { name: 'O22.5', value: '1.80', type: 'over' },
+        { name: 'U22.5', value: '2.00', type: 'under' },
+        { name: '2-0', value: '2.80', type: 'set_score' },
+        { name: '2-1', value: '3.40', type: 'set_score' }
+      ]
+    };
+
+    const odds = sampleOdds[sport] || sampleOdds.soccer;
+    
+    return (
+      <div className="flex gap-1">
+        {odds.slice(0, 6).map((odd, index) => (
+          <button
+            key={index}
+            className={`flex-1 min-w-0 text-white text-xs font-bold py-1.5 px-1 transition-all duration-150 hover:opacity-90 ${
+              hoveredOdd === `${match.id}-${index}` ? 'opacity-80' : ''
+            }`}
+            style={{ 
+              backgroundColor: '#F9DC1C',
+              color: '#000',
+              border: '1px solid #e6c300'
+            }}
+            onMouseEnter={() => setHoveredOdd(`${match.id}-${index}`)}
+            onMouseLeave={() => setHoveredOdd(null)}
+            onClick={(e) => {
+              e.stopPropagation();
+              // Add bet slip logic here
+            }}
+          >
+            <div className="leading-tight">
+              <div className="truncate">{odd.name}</div>
+              <div className="font-black text-sm">{odd.value}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+    );
   };
 
   const renderMarkets = () => {
     if (!fullMatchData?.odds || !Array.isArray(fullMatchData.odds)) {
-      return <div className="no-markets">No markets available</div>;
+      return (
+        <div className="text-center py-12 text-gray-500" style={{ backgroundColor: '#f7f7f7' }}>
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: '#f0f0f0', border: '1px solid #ccc' }}>
+            <span className="text-2xl">📊</span>
+          </div>
+          <div className="text-sm font-medium">No additional markets available</div>
+          <div className="text-xs text-gray-400 mt-1">Markets will appear here during live play</div>
+        </div>
+      );
     }
 
     return (
-      <div className="markets-container">
-        <h4 className="markets-title">Markets & Odds</h4>
-        <div className="markets-grid">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h4 className="text-lg font-bold flex items-center gap-2" style={{ color: '#0066cc' }}>
+            <span className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: '#0066cc' }}>
+              {fullMatchData.odds.length}
+            </span>
+            All Markets
+          </h4>
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#00ff00' }}></span>
+            Live updating
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {fullMatchData.odds.map((market, index) => (
-            <div key={index} className="market-card">
-              <div className="market-header">
-                <h5 className="market-name">
-                  {getMarketName(market.id)} <span className="market-id">(ID: {market.id})</span>
-                  {market.ha && <span className="handicap">({market.ha})</span>}
+            <div key={index} className="rounded p-4 shadow-sm hover:shadow-md transition-shadow" style={{ backgroundColor: 'white', border: '1px solid #ccc' }}>
+              <div className="mb-4">
+                <h5 className="font-bold text-sm mb-1" style={{ color: '#0066cc' }}>
+                  {getMarketName(market.id)}
+                  {market.ha && (
+                    <span className="ml-2 text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: '#e6f3ff', color: '#0066cc' }}>
+                      {market.ha}
+                    </span>
+                  )}
                 </h5>
+                <div className="text-xs text-gray-500">Market #{market.id}</div>
               </div>
-              <div className="odds-list">
+              
+              <div className="space-y-2">
                 {market.o && Array.isArray(market.o) ? (
                   market.o.map((odd, oddIndex) => (
                     <button 
                       key={oddIndex} 
-                      className="odd-button"
+                      className={`w-full p-3 transition-all duration-200 text-sm font-bold ${
+                        odd.bl === 1 
+                          ? 'cursor-not-allowed text-gray-400' 
+                          : 'hover:opacity-90 text-black'
+                      }`}
+                      style={{ 
+                        backgroundColor: odd.bl === 1 ? '#f0f0f0' : '#F9DC1C',
+                        border: `1px solid ${odd.bl === 1 ? '#ddd' : '#e6c300'}`
+                      }}
                       disabled={odd.bl === 1}
                     >
-                      <span className="odd-name">{odd.n}</span>
-                      <span className="odd-value">{odd.v}</span>
+                      <div className="flex justify-between items-center">
+                        <span className="text-left font-medium">{odd.n}</span>
+                        <span className="text-right text-lg font-black">{odd.v}</span>
+                      </div>
                     </button>
                   ))
                 ) : (
-                  <div className="no-odds">No odds available</div>
+                  <div className="text-center py-6 text-gray-400 text-sm rounded" style={{ backgroundColor: '#f7f7f7' }}>
+                    <div className="text-lg mb-1">⏳</div>
+                    <div>Odds loading...</div>
+                  </div>
                 )}
               </div>
             </div>
@@ -204,19 +272,15 @@ function MatchCard({
   };
 
   const getMarketName = (marketId) => {
-    // Simple lookup in the cached dictionary
     return marketDictionary[marketId] || `Market ${marketId}`;
   };
 
   const getMatchEventName = (eventCode) => {
-    // Simple lookup in the cached match events dictionary
-    if (!eventCode) return 'No Event';
+    if (!eventCode) return null;
     
-    // Convert string to number if needed
     const code = typeof eventCode === 'string' ? parseInt(eventCode, 10) : eventCode;
     let eventName = matchEventsDictionary[code] || `Event ${eventCode}`;
     
-    // Replace generic team references with actual team names
     if (data?.t1?.name && data?.t2?.name) {
       eventName = eventName
         .replace(/Home Team/g, data.t1.name)
@@ -229,52 +293,231 @@ function MatchCard({
   };
 
   const isLive = data?.time > 0;
+  const quickStats = getQuickStats();
+  const currentEvent = getMatchEventName(data?.sc);
 
   return (
-    <div className="match-card">
-      {isLive && <div className="live-indicator">Live</div>}
-      
-      <div className="match-header" onClick={() => navigate(`/match/${sport}/${match.id}`)}>
-        <div className="teams">
-          <div className="team-names">
-            {data?.t1?.name || 'Team 1'} vs {data?.t2?.name || 'Team 2'}
-          </div>
-          <div className="match-info">
-            <span>{getPeriod()}</span>
-            <span>{formatTime(data?.time)}</span>
-            <span>ID: {data?.id}</span>
-          </div>
-        </div>
-        <div className="match-header-right">
-          <div className="score">
-            {getScore()}
-          </div>
-          <button 
-            className={`toggle-button ${isExpanded ? 'expanded' : ''}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              onToggle();
-            }}
+    <div className="transition-all duration-200 border-b last:border-b-0" style={{ 
+      borderColor: '#e0e0e0',
+      backgroundColor: isExpanded ? '#f9f9f9' : 'white'
+    }}>
+      {/* Mobile-First Responsive Layout */}
+      <div className="p-3 hover:bg-gray-50 transition-colors">
+        {/* Mobile Layout (default) */}
+        <div className="block md:hidden">
+          <div 
+            className="cursor-pointer"
+            onClick={() => navigate(`/match/${sport}/${match.id}`)}
           >
-            ▼
-          </button>
-        </div>
-      </div>
-
-      <div className="match-details">
-        {getSportSpecificDetails().map((detail, index) => (
-          <div key={index} className="detail-item">
-            <div className="detail-label">{detail.label}</div>
-            <div className="detail-value">{detail.value}</div>
+            {/* Mobile Header - Time & Status */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="text-sm font-bold text-gray-600">{formatTime(data?.time)}</div>
+                {isLive ? (
+                  <div className="text-xs px-2 py-1 rounded-full font-bold animate-pulse" style={{ 
+                    backgroundColor: '#ff3333', 
+                    color: 'white' 
+                  }}>
+                    🔴 LIVE
+                  </div>
+                ) : (
+                  <div className="text-xs text-gray-400">{getPeriod()}</div>
+                )}
+              </div>
+              <button 
+                className="px-3 py-1 rounded text-xs font-bold"
+                style={{ backgroundColor: '#F9DC1C', color: 'black' }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggle();
+                }}
+              >
+                {isExpanded ? 'Less' : 'More'}
+              </button>
+            </div>
+            
+            {/* Mobile Teams & Scores */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <span className="font-bold text-base truncate" style={{ color: '#003366' }}>
+                    {data?.t1?.name || 'Team 1'}
+                  </span>
+                  {quickStats?.corners && (
+                    <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: '#f0f0f0', color: '#666' }}>
+                      C: {quickStats.corners.split('-')[0]}
+                    </span>
+                  )}
+                </div>
+                <div className="text-2xl font-black" style={{ color: isLive ? '#ff3333' : '#333' }}>
+                  {data?.t1?.score || 0}
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <span className="font-bold text-base truncate" style={{ color: '#003366' }}>
+                    {data?.t2?.name || 'Team 2'}
+                  </span>
+                  {quickStats?.corners && (
+                    <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: '#f0f0f0', color: '#666' }}>
+                      C: {quickStats.corners.split('-')[1]}
+                    </span>
+                  )}
+                </div>
+                <div className="text-2xl font-black" style={{ color: isLive ? '#ff3333' : '#333' }}>
+                  {data?.t2?.score || 0}
+                </div>
+              </div>
+            </div>
+            
+            {/* Mobile Quick Odds */}
+            <div className="mt-3">
+              {renderQuickOdds()}
+            </div>
+            
+            {currentEvent && (
+              <div className="text-sm font-medium mt-3 p-2 rounded" style={{ color: '#0066cc', backgroundColor: '#f0f8ff' }}>
+                🔵 {currentEvent}
+              </div>
+            )}
           </div>
-        ))}
+        </div>
+
+        {/* Desktop Layout (md and up) */}
+        <div className="hidden md:flex items-center gap-4">
+          {/* Time & Status */}
+          <div className="w-16 text-center">
+            <div className="text-xs font-bold text-gray-600">{formatTime(data?.time)}</div>
+            {isLive ? (
+              <div className="text-xs px-1.5 py-0.5 rounded-full font-bold animate-pulse mt-1" style={{ 
+                backgroundColor: '#ff3333', 
+                color: 'white' 
+              }}>
+                LIVE
+              </div>
+            ) : (
+              <div className="text-xs text-gray-400 mt-1">{getPeriod()}</div>
+            )}
+          </div>
+          
+          {/* Teams & Score - bet365 team colors */}
+          <div className="flex-1 min-w-0">
+            <div 
+              className="cursor-pointer group" 
+              onClick={() => navigate(`/match/${sport}/${match.id}`)}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <span className="font-bold truncate group-hover:underline transition-all" style={{ color: '#003366' }}>
+                    {data?.t1?.name || 'Team 1'}
+                  </span>
+                  {quickStats?.corners && (
+                    <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: '#f0f0f0', color: '#666' }}>
+                      C: {quickStats.corners.split('-')[0]}
+                    </span>
+                  )}
+                </div>
+                <div className="text-xl font-black min-w-0" style={{ color: isLive ? '#ff3333' : '#333' }}>
+                  {data?.t1?.score || 0}
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <span className="font-bold truncate group-hover:underline transition-all" style={{ color: '#003366' }}>
+                    {data?.t2?.name || 'Team 2'}
+                  </span>
+                  {quickStats?.corners && (
+                    <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: '#f0f0f0', color: '#666' }}>
+                      C: {quickStats.corners.split('-')[1]}
+                    </span>
+                  )}
+                </div>
+                <div className="text-xl font-black min-w-0" style={{ color: isLive ? '#ff3333' : '#333' }}>
+                  {data?.t2?.score || 0}
+                </div>
+              </div>
+              
+              {currentEvent && (
+                <div className="text-xs font-medium mt-1 truncate" style={{ color: '#0066cc' }}>
+                  🔵 {currentEvent}
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Quick Odds - bet365 style */}
+          <div className="flex-1 max-w-md">
+            {renderQuickOdds()}
+          </div>
+          
+          {/* More Markets */}
+          <div className="w-12 text-center">
+            <button 
+              className={`w-10 h-10 rounded-full text-xs font-black transition-all duration-200 border-2 ${
+                isExpanded 
+                  ? 'shadow-lg' 
+                  : 'hover:shadow-md'
+              }`}
+              style={{
+                backgroundColor: isExpanded ? '#F9DC1C' : 'white',
+                borderColor: isExpanded ? '#e6c300' : '#ccc',
+                color: isExpanded ? '#000' : '#666'
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onToggle();
+              }}
+            >
+              +{fullMatchData?.odds?.length || '87'}
+            </button>
+          </div>
+        </div>
+        
+        {/* Additional Quick Info - Mobile & Desktop */}
+        {(quickStats || isLive) && (
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-3 pt-2 gap-2" style={{ borderTop: '1px solid #e0e0e0' }}>
+            <div className="flex items-center gap-2 sm:gap-3 text-xs text-gray-500 flex-wrap">
+              {quickStats?.shots && (
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#0066cc' }}></span>
+                  Shots: {quickStats.shots}
+                </span>
+              )}
+              {quickStats?.cards && (
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#ffcc00' }}></span>
+                  Cards: {quickStats.cards}
+                </span>
+              )}
+              {isLive && (
+                <span className="flex items-center gap-1 font-medium" style={{ color: '#009900' }}>
+                  <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: '#00ff00' }}></span>
+                  Live betting available
+                </span>
+              )}
+            </div>
+            
+            <div className="flex items-center gap-2 text-xs text-gray-400">
+              <span>ID: {match.id}</span>
+              <span>•</span>
+              <span>{sport.toUpperCase()}</span>
+            </div>
+          </div>
+        )}
       </div>
 
+      {/* Expanded Markets Section - bet365 style */}
       {isExpanded && (
-        <div className="match-expansion">
+        <div className="border-t p-6" style={{ backgroundColor: '#f7f7f7', borderColor: '#e0e0e0' }}>
           {fullMatchData ? renderMarkets() : (
-            <div className="loading-markets">Loading markets...</div>
+            <div className="text-center py-12 text-gray-500">
+              <div className="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4" style={{ borderColor: '#0066cc' }}></div>
+              <div className="text-sm font-medium">Loading additional markets...</div>
+              <div className="text-xs text-gray-400 mt-1">Fetching latest odds and markets</div>
+            </div>
           )}
         </div>
       )}

@@ -20,6 +20,9 @@ defmodule SportsbookWeb.Router do
     # Homepage serves React app
     get "/", PageController, :react_app
     
+    # React Router catch-all (must be last)
+    get "/match/*path", PageController, :react_app
+    
     # Event routes
     live "/events", EventLive.Index, :index
     live "/events/new", EventLive.Index, :new

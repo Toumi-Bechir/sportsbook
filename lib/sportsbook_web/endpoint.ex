@@ -19,6 +19,12 @@ defmodule SportsbookWeb.Endpoint do
     websocket: true,
     longpoll: false
 
+  # Serve React static files from the correct location
+  plug Plug.Static,
+    at: "/static",
+    from: {:sportsbook, "priv/static/react/static"},
+    gzip: false
+
   # Serve at "/" the static files from "priv/static" directory.
   #
   # You should set gzip to true if you are running phx.digest

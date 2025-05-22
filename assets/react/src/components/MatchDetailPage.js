@@ -10,16 +10,13 @@ function MatchDetailPage() {
   const [sports, setSports] = useState([]);
   const [allMatches, setAllMatches] = useState({});
   const [expandedSports, setExpandedSports] = useState(new Set([selectedSport]));
-
-  // Ensure selected sport is always expanded
-  useEffect(() => {
-    if (selectedSport && !expandedSports.has(selectedSport)) {
-      setExpandedSports(new Set([selectedSport]));
-    }
-  }, [selectedSport, expandedSports]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
+  const [expandedSportsInSidebar, setExpandedSportsInSidebar] = useState(new Set());
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [fullMatchData, setFullMatchData] = useState(null);
-  const [activeTab, setActiveTab] = useState('stats');
+  const [activeTab, setActiveTab] = useState('markets');
+  const [selectedMarketCategory, setSelectedMarketCategory] = useState('popular');
   
   // Dictionaries
   const [marketDictionaries, setMarketDictionaries] = useState({});
@@ -107,7 +104,6 @@ function MatchDetailPage() {
       }
     });
 
-    // Clean up subscriptions for sports that are no longer expanded
     const keysToRemove = [];
     subscribedMatches.current.forEach(key => {
       const [sport] = key.split(':');
@@ -137,7 +133,7 @@ function MatchDetailPage() {
     };
   }, []);
 
-  // Subscribe to detailed match data for selected match
+  // Subscribe to detailed match data for selected match (big data)
   useEffect(() => {
     if (!socket || !matchId) return;
 
@@ -168,6 +164,44 @@ function MatchDetailPage() {
     };
   }, [socket, selectedSport, matchId]);
 
+  // Subscribe to current match small data updates
+  useEffect(() => {
+    if (!socket || !selectedSport || !matchId) return;
+
+    const channelKey = `${selectedSport}:${matchId}`;
+    
+    // Don't create duplicate subscription if already exists
+    if (matchChannelsRef.current.has(channelKey)) {
+      return;
+    }
+
+    const channelTopic = `match:${selectedSport}:${matchId}`;
+    const matchChannel = socket.channel(channelTopic, {});
+    
+    matchChannel.join()
+      .receive('ok', () => {
+        console.log(`✅ Subscribed to small data for current match ${matchId}`);
+        subscribedMatches.current.add(channelKey);
+      })
+      .receive('error', resp => {
+        console.log(`❌ Failed to subscribe to current match small data:`, resp);
+      });
+
+    matchChannel.on('match_update', payload => {
+      updateSpecificMatch(selectedSport, matchId, payload.data);
+    });
+
+    matchChannelsRef.current.set(channelKey, matchChannel);
+
+    return () => {
+      if (matchChannel) {
+        matchChannel.leave();
+        matchChannelsRef.current.delete(channelKey);
+        subscribedMatches.current.delete(channelKey);
+      }
+    };
+  }, [socket, selectedSport, matchId]);
+
   // Load initial selected match
   useEffect(() => {
     if (allMatches[selectedSport] && matchId) {
@@ -188,6 +222,12 @@ function MatchDetailPage() {
     }
   }, [selectedSport, matchId]);
 
+  // Ensure selectedSport is always in expandedSports
+  useEffect(() => {
+    if (selectedSport) {
+      setExpandedSports(prev => new Set([...prev, selectedSport]));
+    }
+  }, [selectedSport]);
 
   const fetchDictionaries = async (sport) => {
     try {
@@ -266,6 +306,7 @@ function MatchDetailPage() {
   };
 
   const updateSpecificMatch = (sport, matchId, newData) => {
+    // Update sidebar menu matches with small data
     setAllMatches(prevMatches => {
       if (!prevMatches[sport]) return prevMatches;
       
@@ -289,7 +330,7 @@ function MatchDetailPage() {
       };
     });
 
-    // Update selected match if it's the one being updated
+    // Update selected match with small data for header
     if (selectedMatch && selectedMatch.id === matchId && sport === selectedSport) {
       setSelectedMatch(prevMatch => ({
         ...prevMatch,
@@ -308,27 +349,28 @@ function MatchDetailPage() {
     return null;
   };
 
-  const handleSportToggle = (sport) => {
-    console.log('🔥 handleSportToggle called with:', sport);
-    console.log('🔥 Current expandedSports:', Array.from(expandedSports));
-    setExpandedSports(prev => {
-      console.log('🔥 Previous expanded sports:', Array.from(prev));
-      const newSet = new Set();
-      // If sport is not currently expanded, expand it (and collapse others)
-      if (!prev.has(sport)) {
-        newSet.add(sport);
-        console.log('🔥 Expanding sport:', sport);
-      } else {
-        console.log('🔥 Collapsing sport:', sport);
-      }
-      console.log('🔥 New expanded sports will be:', Array.from(newSet));
-      // If sport is already expanded, clicking it will collapse it (empty set)
-      return newSet;
-    });
-  };
-
   const handleMatchSelect = (sport, matchId) => {
     navigate(`/match/${sport}/${matchId}`);
+  };
+
+  const handleSportChange = (newSport) => {
+    // Add the new sport to expanded sports to fetch its matches
+    setExpandedSports(prev => new Set([...prev, newSport]));
+    navigate(`/match/${newSport}/${matchId}`);
+  };
+
+  const toggleSidebarSport = (sportName) => {
+    setExpandedSportsInSidebar(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(sportName)) {
+        newSet.delete(sportName);
+      } else {
+        newSet.add(sportName);
+        // Also fetch matches for this sport if not already fetched
+        setExpandedSports(prevExpanded => new Set([...prevExpanded, sportName]));
+      }
+      return newSet;
+    });
   };
 
   const formatTime = (seconds) => {
@@ -340,12 +382,12 @@ function MatchDetailPage() {
 
   const formatSportName = (sport) => {
     const sportNames = {
-      soccer: '⚽ Soccer',
+      soccer: '⚽ Football',
       basket: '🏀 Basketball', 
       tennis: '🎾 Tennis',
       baseball: '⚾ Baseball',
       amfootball: '🏈 American Football',
-      hockey: '🏒 Hockey',
+      hockey: '🏒 Ice Hockey',
       volleyball: '🏐 Volleyball'
     };
     return sportNames[sport] || sport;
@@ -369,190 +411,612 @@ function MatchDetailPage() {
     }
   };
 
+  const getMarketCategories = () => {
+    if (!fullMatchData?.odds) return [];
+    
+    const categories = {
+      popular: 'Most Popular',
+      match: 'Match Result',
+      goals: 'Goals',
+      corners: 'Corners',
+      cards: 'Cards',
+      specials: 'Specials'
+    };
+    
+    return Object.entries(categories).map(([key, name]) => ({
+      key,
+      name,
+      count: fullMatchData.odds.length // In real app, would filter by category
+    }));
+  };
+
+  const isLive = fullMatchData?.time > 0 || selectedMatch?.data?.time > 0;
+
   if (!selectedMatch) {
     return (
-      <div className="match-detail-page">
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p>Loading match details...</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <h3 className="text-lg font-semibold text-gray-700 mb-2">Loading Match Details</h3>
+          <p className="text-gray-500">Fetching live data and markets...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="match-detail-page">
-      {/* Left Sidebar - Sports Menu */}
-      <aside className="sports-sidebar">
-        <div className="sidebar-header">
-          <button 
-            className="back-button"
-            onClick={() => navigate('/')}
-          >
-            ← Back to Home
-          </button>
-        </div>
-        
-        <div className="new-sports-menu">
-          {sports.map(sport => {
-            const isExpanded = expandedSports.has(sport.name);
-            return (
-              <div key={sport.name} className={`sport-card ${isExpanded ? 'expanded' : 'collapsed'}`}>
-                <div 
-                  className="sport-header"
-                  onClick={() => {
-                    console.log('🔥 NEW MENU - Clicked sport:', sport.name);
-                    const newExpanded = new Set();
-                    if (!isExpanded) {
-                      newExpanded.add(sport.name);
-                    }
-                    setExpandedSports(newExpanded);
-                  }}
-                >
-                  <div className="sport-info">
-                    <h3 className="sport-title">{formatSportName(sport.name)}</h3>
-                    <span className="sport-badge">{sport.match_count} matches</span>
+    <div className="min-h-screen w-full bg-gray-900">
+      {/* Modern Header */}
+      <header className="bg-gray-800 text-white shadow-xl border-b border-gray-700 w-full">
+        <div className="w-full">
+          {/* Top notification bar */}
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2 px-4 text-xs text-center font-medium">
+            <span className="inline-flex items-center gap-2">
+              🎯 Live Match Center • Real-time odds • Cash Out available
+              <span className="bg-white bg-opacity-20 px-2 py-0.5 rounded-full text-xs font-bold">LIVE</span>
+            </span>
+          </div>
+          
+          {/* Main header */}
+          <div className="flex items-center justify-between py-4 px-6 border-b border-gray-700">
+            <div className="flex items-center gap-8">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-2 rounded-lg">
+                    <span className="text-white font-black text-lg">S</span>
                   </div>
-                  <div className="expand-arrow">
-                    {isExpanded ? '▼' : '▶'}
+                  <h1 className="font-bold text-2xl bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
+                    SportsBet
+                  </h1>
+                </div>
+                
+                <div className="flex items-center gap-2 bg-gray-700 px-3 py-1.5 rounded-full text-xs">
+                  <div 
+                    className={`w-2 h-2 rounded-full animate-pulse ${
+                      connectionStatus === 'connected' ? 'bg-green-500' : 'bg-red-500'
+                    }`}
+                  />
+                  <span className="text-gray-300 font-medium">{connectionStatus.toUpperCase()}</span>
+                </div>
+              </div>
+              
+              <div className="hidden lg:flex items-center gap-4 text-sm">
+                {isLive && (
+                  <div className="flex items-center gap-2 bg-red-600 px-3 py-1.5 rounded-full animate-pulse">
+                    <span className="w-2 h-2 bg-white rounded-full"></span>
+                    <span className="font-bold text-white">LIVE MATCH</span>
+                  </div>
+                )}
+                <div className="bg-gray-700 px-3 py-1.5 rounded-full">
+                  <span className="text-gray-300">Match #{matchId}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <button 
+                className="hidden md:block bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                onClick={() => setIsLeftSidebarOpen(!isLeftSidebarOpen)}
+              >
+                {isLeftSidebarOpen ? '◄' : '►'}
+              </button>
+              <button 
+                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 px-6 py-2.5 rounded-lg font-bold text-sm transition-all duration-200 transform hover:scale-105"
+                onClick={() => navigate('/')}
+              >
+                ← Back to Live
+              </button>
+              <button
+                className="md:hidden bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg text-sm transition-colors"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                {isMobileMenuOpen ? '✕' : '☰'}
+              </button>
+            </div>
+          </div>
+          
+          {/* Navigation tabs */}
+          <div className="bg-gray-800 border-b border-gray-700">
+            <div className="flex items-center justify-between px-6 py-3">
+              <nav className="flex items-center gap-1">
+                <button 
+                  className={`px-4 py-2 text-sm font-bold rounded-lg transition-all ${
+                    activeTab === 'markets' 
+                      ? 'bg-blue-600 text-white shadow-lg' 
+                      : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                  }`}
+                  onClick={() => setActiveTab('markets')}
+                >
+                  🎯 Markets
+                </button>
+                <button 
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                    activeTab === 'stats' 
+                      ? 'bg-blue-600 text-white shadow-lg' 
+                      : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                  }`}
+                  onClick={() => setActiveTab('stats')}
+                >
+                  📊 Statistics
+                </button>
+                <button 
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                    activeTab === 'tracker' 
+                      ? 'bg-blue-600 text-white shadow-lg' 
+                      : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                  }`}
+                  onClick={() => setActiveTab('tracker')}
+                >
+                  ⚽ Live Tracker
+                </button>
+              </nav>
+              
+              <div className="flex items-center gap-4 text-sm">
+                <button className="text-blue-400 hover:text-blue-300 font-medium flex items-center gap-2">
+                  <span>🔴</span>
+                  Watch Live
+                </button>
+                <button className="text-gray-400 hover:text-white flex items-center gap-2">
+                  <span>💰</span>
+                  Cash Out
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Modern Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-50 bg-black bg-opacity-70 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}>
+          <div className="absolute left-0 top-0 h-full w-80 bg-gray-800 shadow-2xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-gray-900 px-4 py-3 border-b border-gray-700 flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-white uppercase tracking-wide">Quick Navigation</h2>
+              <button 
+                className="text-gray-400 hover:text-white text-xl transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="p-4">
+              <button 
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 px-4 rounded-lg font-bold mb-4 transition-all duration-200 transform hover:scale-105"
+                onClick={() => {
+                  navigate('/');
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                ← Back to Live Events
+              </button>
+              
+              <div className="space-y-2">
+                {sports.map(sport => (
+                  <button
+                    key={sport.name}
+                    className="w-full text-left p-3 rounded-lg bg-gray-750 border border-gray-600 hover:bg-gray-700 transition-colors"
+                    onClick={() => {
+                      handleSportChange(sport.name);
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    <div className="font-medium text-white">{formatSportName(sport.name)}</div>
+                    <div className="text-sm text-gray-400">{sport.match_count} matches</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="w-full">
+        <div className="flex w-full min-h-screen">
+          {/* Left Sidebar - Modern Sports Browser */}
+          <div className={`hidden md:block bg-gray-800 border-r border-gray-700 overflow-y-auto max-h-screen transition-all duration-300 shadow-xl ${
+            isLeftSidebarOpen ? 'w-80 lg:w-96' : 'w-12'
+          }`}>
+            {isLeftSidebarOpen ? (
+              // Full Sidebar Content
+              <div className="h-full">
+                {/* Modern Sidebar Header */}
+                <div className="p-4 bg-gray-900 border-b border-gray-700">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-2 rounded-lg">
+                        <span className="text-lg">🏆</span>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-sm text-white">Sports Browser</h3>
+                        <div className="text-xs text-gray-400">Navigate & Explore</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Modern Sports List */}
+                <div className="flex-1 bg-gray-800">
+                  {sports.map(sport => (
+                    <div key={sport.name} className="mb-1">
+                      {/* Sport Header - Clickable to expand/collapse */}
+                      <button
+                        className={`w-full text-left p-3 border-b border-gray-200 transition-colors ${
+                          selectedSport === sport.name 
+                            ? 'bg-yellow-100 border-l-4 border-yellow-500' 
+                            : 'hover:bg-gray-100'
+                        }`}
+                        onClick={() => toggleSidebarSport(sport.name)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg">{
+                              sport.name === 'soccer' ? '⚽' :
+                              sport.name === 'basket' ? '🏀' :
+                              sport.name === 'tennis' ? '🎾' :
+                              sport.name === 'baseball' ? '⚾' :
+                              sport.name === 'amfootball' ? '🏈' :
+                              sport.name === 'hockey' ? '🏒' :
+                              sport.name === 'volleyball' ? '🏐' : '🏆'
+                            }</span>
+                            <div>
+                              <div className="font-medium text-sm" style={{ 
+                                color: selectedSport === sport.name ? '#003d02' : '#333' 
+                              }}>
+                                {formatSportName(sport.name)}
+                              </div>
+                              <div className="text-xs text-gray-500">{sport.match_count} matches</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {selectedSport === sport.name && (
+                              <span className="text-xs px-2 py-1 rounded-full font-bold" style={{ 
+                                backgroundColor: '#ffb80a', 
+                                color: 'black' 
+                              }}>
+                                CURRENT
+                              </span>
+                            )}
+                            <span className="text-gray-400">
+                              {expandedSportsInSidebar.has(sport.name) ? '▼' : '►'}
+                            </span>
+                          </div>
+                        </div>
+                      </button>
+
+                      {/* Expanded Matches List */}
+                      {expandedSportsInSidebar.has(sport.name) && allMatches[sport.name] && (
+                        <div style={{ backgroundColor: 'white' }} className="border-l-4 border-gray-200">
+                          {allMatches[sport.name].map((league, leagueIndex) => (
+                            <div key={leagueIndex}>
+                              {/* League Header */}
+                              <div className="px-4 py-2 text-xs font-bold bg-blue-50 text-blue-600">
+                                {league.league} ({league.matches.length})
+                              </div>
+                              
+                              {/* League Matches */}
+                              {league.matches.map((match, matchIndex) => {
+                                const isCurrentMatch = match.id === matchId && sport.name === selectedSport;
+                                const isLive = match.data?.time > 0;
+                                
+                                return (
+                                  <button
+                                    key={match.id}
+                                    className={`w-full text-left p-2 border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                                      isCurrentMatch ? 'bg-yellow-50' : ''
+                                    }`}
+                                    onClick={() => handleMatchSelect(sport.name, match.id)}
+                                  >
+                                    <div className="flex items-center justify-between mb-1">
+                                      <div className="flex items-center gap-2">
+                                        {isLive && (
+                                          <span className="w-2 h-2 rounded-full animate-pulse bg-red-500"></span>
+                                        )}
+                                        <span className="text-xs text-gray-600">
+                                          {isLive ? formatTime(match.data.time) : 'Pre-Match'}
+                                        </span>
+                                      </div>
+                                      {isCurrentMatch && (
+                                        <span className="text-xs px-1 py-0.5 rounded font-bold bg-yellow-400 text-black">
+                                          VIEWING
+                                        </span>
+                                      )}
+                                    </div>
+                                    
+                                    <div className="text-xs space-y-0.5">
+                                      <div className="flex justify-between">
+                                        <span className="font-medium text-blue-900">
+                                          {match.data?.t1?.name || 'Team 1'}
+                                        </span>
+                                        <span className="font-bold text-red-600">
+                                          {match.data?.t1?.score || 0}
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="font-medium text-blue-900">
+                                          {match.data?.t2?.name || 'Team 2'}
+                                        </span>
+                                        <span className="font-bold text-red-600">
+                                          {match.data?.t2?.score || 0}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              // Collapsed Sidebar - Icons Only
+              <div className="h-full" style={{ backgroundColor: '#f7f7f7' }}>
+                <div className="p-2" style={{ backgroundColor: '#003d02' }}>
+                  <div className="text-center">
+                    <span className="text-xl">🏆</span>
                   </div>
                 </div>
                 
-                {isExpanded && allMatches[sport.name] && (
-                  <div className="sport-matches">
-                    {allMatches[sport.name].map((league, leagueIndex) => (
-                      <div key={leagueIndex} className="league-container">
-                        <div className="league-title">{league.league}</div>
-                        <div className="match-grid">
-                          {league.matches.map(match => (
-                            <div
-                              key={match.id}
-                              className={`match-row ${match.id === matchId ? 'active' : ''}`}
-                              onClick={() => handleMatchSelect(sport.name, match.id)}
-                            >
-                              <div className="match-header-mini">
-                                <span className="match-time-mini">{formatTime(match.data?.time)}</span>
-                              </div>
-                              <div className="teams-mini">
-                                <div className="team-row">
-                                  <span className="team-name-mini">{match.data?.t1?.name || 'Team 1'}</span>
-                                  <span className="team-score-mini">{match.data?.t1?.score || 0}</span>
+                <div className="p-1">
+                  {sports.map(sport => (
+                    <button
+                      key={sport.name}
+                      className={`w-full p-2 mb-1 rounded text-center transition-colors ${
+                        selectedSport === sport.name 
+                          ? 'bg-yellow-400 text-black' 
+                          : 'hover:bg-gray-200'
+                      }`}
+                      onClick={() => handleSportChange(sport.name)}
+                      title={formatSportName(sport.name)}
+                    >
+                      <span className="text-lg block">{
+                        sport.name === 'soccer' ? '⚽' :
+                        sport.name === 'basket' ? '🏀' :
+                        sport.name === 'tennis' ? '🎾' :
+                        sport.name === 'baseball' ? '⚾' :
+                        sport.name === 'amfootball' ? '🏈' :
+                        sport.name === 'hockey' ? '🏒' :
+                        sport.name === 'volleyball' ? '🏐' : '🏆'
+                      }</span>
+                      <span className="text-xs block">{sport.match_count}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Main Content Area */}
+          <div className="flex-1 w-full bg-gray-50">
+            {/* Match Header */}
+            <div className="bg-white border-b border-gray-200 w-full">
+              <div className="p-4 lg:p-6">
+                <div className="flex flex-col lg:flex-row items-center justify-between mb-6 gap-4">
+                  <div className="flex flex-col sm:flex-row items-center gap-4 lg:gap-6 w-full lg:w-auto">
+                    <div className="text-center">
+                      <div className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-1">
+                        {fullMatchData?.t1?.name || selectedMatch?.data?.t1?.name || 'Team 1'}
+                      </div>
+                      <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-blue-600">
+                        {fullMatchData?.t1?.score ?? selectedMatch?.data?.t1?.score ?? 0}
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm lg:text-lg text-gray-600 mb-2">VS</div>
+                      <div className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
+                        {formatTime(fullMatchData?.time ?? selectedMatch?.data?.time)}
+                      </div>
+                      {(fullMatchData?.time > 0 || selectedMatch?.data?.time > 0) && (
+                        <div className="text-xs sm:text-sm bg-red-500 text-white px-2 py-1 rounded-full font-bold animate-pulse mt-2">
+                          🔴 LIVE
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-1">
+                        {fullMatchData?.t2?.name || selectedMatch?.data?.t2?.name || 'Team 2'}
+                      </div>
+                      <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-blue-600">
+                        {fullMatchData?.t2?.score ?? selectedMatch?.data?.t2?.score ?? 0}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="text-right">
+                    <div className="text-sm text-gray-500 mb-2">Status</div>
+                    <div className={`px-4 py-2 rounded-lg font-bold ${
+                      isLive ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-700'
+                    }`}>
+                      {isLive ? '🔴 LIVE' : '⏰ Pre-Match'}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-6 text-sm text-gray-600">
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                    {formatSportName(selectedSport)}
+                  </span>
+                  <span>Match ID: {matchId}</span>
+                  <span>•</span>
+                  <span>Real-time updates</span>
+                  {isLive && (
+                    <>
+                      <span>•</span>
+                      <span className="text-red-600 font-medium">Live betting available</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Tab Content */}
+            {activeTab === 'markets' && (
+              <div className="p-4 lg:p-6 w-full">
+                {/* Market Categories */}
+                <div className="mb-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
+                    <h2 className="text-lg lg:text-xl font-bold text-gray-900">Betting Markets</h2>
+                    <span className="bg-blue-100 text-blue-800 text-xs sm:text-sm px-2 py-1 rounded-full font-bold w-fit">
+                      {fullMatchData?.odds?.length || 0} Available
+                    </span>
+                  </div>
+                  
+                  <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+                    {getMarketCategories().map(category => (
+                      <button
+                        key={category.key}
+                        className={`px-3 lg:px-4 py-2 text-xs lg:text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
+                          selectedMarketCategory === category.key
+                            ? 'bg-yellow-500 text-black'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                        onClick={() => setSelectedMarketCategory(category.key)}
+                      >
+                        {category.name} ({category.count})
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Markets Grid */}
+                {fullMatchData?.odds && Array.isArray(fullMatchData.odds) ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 lg:gap-6 w-full">
+                    {fullMatchData.odds.map((market, index) => (
+                      <div key={index} className="bg-white rounded-xl border border-gray-200 p-4 lg:p-6 shadow-sm hover:shadow-md transition-shadow w-full">
+                        <div className="mb-4">
+                          <h3 className="font-bold text-gray-900 text-sm lg:text-lg mb-1">
+                            {getMarketName(market.id)}
+                            {market.ha && (
+                              <span className="ml-2 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                                {market.ha}
+                              </span>
+                            )}
+                          </h3>
+                          <div className="text-xs lg:text-sm text-gray-500">Market #{market.id}</div>
+                        </div>
+                        
+                        <div className="space-y-2 lg:space-y-3">
+                          {market.o && Array.isArray(market.o) ? (
+                            market.o.map((odd, oddIndex) => (
+                              <button 
+                                key={oddIndex} 
+                                className={`w-full p-3 lg:p-4 rounded-xl transition-all duration-200 text-xs lg:text-sm font-bold border-2 ${
+                                  odd.bl === 1 
+                                    ? 'bg-gray-50 text-gray-400 cursor-not-allowed border-gray-200' 
+                                    : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white border-transparent shadow-lg hover:shadow-xl transform hover:scale-105'
+                                }`}
+                                disabled={odd.bl === 1}
+                              >
+                                <div className="flex justify-between items-center">
+                                  <span className="text-left font-medium truncate">{odd.n}</span>
+                                  <span className="text-right text-lg lg:text-xl font-black">{odd.v}</span>
                                 </div>
-                                <div className="team-row">
-                                  <span className="team-name-mini">{match.data?.t2?.name || 'Team 2'}</span>
-                                  <span className="team-score-mini">{match.data?.t2?.score || 0}</span>
-                                </div>
-                              </div>
+                              </button>
+                            ))
+                          ) : (
+                            <div className="text-center py-6 lg:py-8 text-gray-400 bg-gray-50 rounded-xl">
+                              <div className="text-xl lg:text-2xl mb-2">⏳</div>
+                              <div className="text-xs lg:text-sm">Loading odds...</div>
                             </div>
-                          ))}
+                          )}
                         </div>
                       </div>
                     ))}
                   </div>
+                ) : (
+                  <div className="text-center py-12 lg:py-16 text-gray-500">
+                    <div className="w-16 lg:w-20 h-16 lg:h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                      <span className="text-2xl lg:text-3xl">📊</span>
+                    </div>
+                    <h3 className="text-lg lg:text-xl font-semibold text-gray-700 mb-2">Loading Markets</h3>
+                    <p className="text-sm lg:text-base text-gray-500 mb-4">Fetching the latest betting odds...</p>
+                    <div className="w-6 lg:w-8 h-6 lg:h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                  </div>
                 )}
               </div>
-            );
-          })}
-        </div>
-      </aside>
+            )}
 
-      {/* Main Content Area */}
-      <main className="main-content">
-        {/* Sticky Header */}
-        <header className="match-header sticky">
-          <div className="match-info">
-            <div className="teams">
-              <span className="team-name">{fullMatchData?.t1?.name || selectedMatch.data?.t1?.name || 'Team 1'}</span>
-              <span className="vs">vs</span>
-              <span className="team-name">{fullMatchData?.t2?.name || selectedMatch.data?.t2?.name || 'Team 2'}</span>
-            </div>
-            <div className="score">{getScore(fullMatchData || selectedMatch.data)}</div>
-            <div className="match-time">{formatTime(fullMatchData?.time || selectedMatch.data?.time)}</div>
-          </div>
-          <div className="connection-status" style={{ color: connectionStatus === 'connected' ? '#10B981' : '#EF4444' }}>
-            ● {connectionStatus}
-          </div>
-        </header>
-
-        {/* Markets and Odds */}
-        <section className="markets-section">
-          <div className="markets-container">
-            {fullMatchData?.odds && Array.isArray(fullMatchData.odds) ? (
-              <div className="markets-grid">
-                {fullMatchData.odds.map((market, index) => (
-                  <div key={index} className="market-card">
-                    <div className="market-header">
-                      <h5 className="market-name">
-                        {getMarketName(market.id)}
-                        {market.ha && <span className="handicap">({market.ha})</span>}
-                      </h5>
-                    </div>
-                    <div className="odds-list">
-                      {market.o && Array.isArray(market.o) ? (
-                        market.o.map((odd, oddIndex) => (
-                          <button 
-                            key={oddIndex} 
-                            className="odd-button"
-                            disabled={odd.bl === 1}
-                          >
-                            <span className="odd-name">{odd.n}</span>
-                            <span className="odd-value">{odd.v}</span>
-                          </button>
-                        ))
-                      ) : (
-                        <div className="no-odds">No odds available</div>
-                      )}
-                    </div>
+            {activeTab === 'stats' && (
+              <div className="p-6">
+                <div className="text-center py-16 text-gray-500">
+                  <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                    <span className="text-3xl">📊</span>
                   </div>
-                ))}
+                  <h3 className="text-xl font-semibold text-gray-700 mb-2">Match Statistics</h3>
+                  <p className="text-gray-500">Live match stats will be displayed here</p>
+                </div>
               </div>
-            ) : (
-              <div className="loading-markets">Loading markets...</div>
+            )}
+
+            {activeTab === 'tracker' && (
+              <div className="p-6">
+                <div className="text-center py-16 text-gray-500">
+                  <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                    <span className="text-3xl">⚽</span>
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-700 mb-2">Live Match Tracker</h3>
+                  <p className="text-gray-500">Real-time match visualization coming soon</p>
+                </div>
+              </div>
             )}
           </div>
-        </section>
-      </main>
-
-      {/* Right Sidebar - Match Tracker and Stats */}
-      <aside className="match-tracker">
-        {/* Match Tracker Placeholder */}
-        <div className="tracker-section">
-          <h3>Match Tracker</h3>
-          <div className="tracker-placeholder">
-            <p>Match tracker will be implemented here</p>
-          </div>
-        </div>
-
-        {/* Stats/Timeline Filter */}
-        <div className="stats-section">
-          <nav className="stats-nav">
-            <button 
-              className={`nav-tab ${activeTab === 'stats' ? 'active' : ''}`}
-              onClick={() => setActiveTab('stats')}
-            >
-              Stats
-            </button>
-            <button 
-              className={`nav-tab ${activeTab === 'timeline' ? 'active' : ''}`}
-              onClick={() => setActiveTab('timeline')}
-            >
-              Timeline
-            </button>
-          </nav>
           
-          <div className="stats-content">
-            {activeTab === 'stats' ? (
-              <div className="stats-data">
-                <p>Match statistics will be displayed here</p>
+          {/* Right Sidebar - Bet Slip */}
+          <div className="hidden xl:block w-80 2xl:w-96 bg-white border-l border-gray-200">
+            <div className="p-4 lg:p-6">
+              <div className="bg-gray-100 rounded-xl p-6 text-center mb-6">
+                <div className="text-gray-600 mb-3">
+                  <div className="text-3xl mb-3">🎫</div>
+                  <div className="font-bold text-lg">Bet Slip</div>
+                </div>
+                <div className="text-sm text-gray-500 mb-4">
+                  Click on odds to add selections
+                </div>
+                <button className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-bold transition-colors">
+                  Quick Bet
+                </button>
               </div>
-            ) : (
-              <div className="timeline-data">
-                <p>Match timeline will be displayed here</p>
+              
+              {/* Live Updates */}
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-4 text-white mb-4">
+                <div className="text-sm font-medium mb-2">🔴 Live Updates</div>
+                <div className="text-xs mb-3">Get real-time notifications for this match</div>
+                <button className="bg-white text-blue-600 px-3 py-1 rounded text-xs font-medium">
+                  Enable Alerts
+                </button>
               </div>
-            )}
+              
+              {/* Match Insights */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <div className="text-sm font-bold text-gray-700 mb-3">📈 Match Insights</div>
+                <div className="space-y-2 text-xs text-gray-600">
+                  <div className="flex justify-between">
+                    <span>Bets placed:</span>
+                    <span className="font-medium">2,847</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Most backed:</span>
+                    <span className="font-medium text-green-600">Home Win</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Biggest bet:</span>
+                    <span className="font-medium">£5,420</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Live bettors:</span>
+                    <span className="font-medium text-red-600">1,203</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </aside>
+      </div>
     </div>
   );
 }
