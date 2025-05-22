@@ -594,18 +594,38 @@ function MatchDetailPage() {
             {isLeftSidebarOpen ? (
               // Full Sidebar Content
               <div className="h-full">
-                {/* Modern Sidebar Header */}
+                {/* Modern Sidebar Header - Clickable */}
                 <div className="p-4 bg-gray-900 border-b border-gray-700">
                   <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
+                    <button 
+                      className="flex items-center gap-3 w-full hover:bg-gray-800 p-2 rounded-lg transition-colors"
+                      onClick={() => setIsLeftSidebarOpen(!isLeftSidebarOpen)}
+                    >
                       <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-2 rounded-lg">
-                        <span className="text-lg">🏆</span>
+                        {/* Animated Hamburger Menu */}
+                        <div className="w-5 h-5 flex flex-col justify-center items-center space-y-1">
+                          <div 
+                            className={`w-4 h-0.5 bg-white transition-all duration-300 ${
+                              isLeftSidebarOpen ? 'rotate-45 translate-y-1.5' : ''
+                            }`}
+                          ></div>
+                          <div 
+                            className={`w-4 h-0.5 bg-white transition-all duration-300 ${
+                              isLeftSidebarOpen ? 'opacity-0' : ''
+                            }`}
+                          ></div>
+                          <div 
+                            className={`w-4 h-0.5 bg-white transition-all duration-300 ${
+                              isLeftSidebarOpen ? '-rotate-45 -translate-y-1.5' : ''
+                            }`}
+                          ></div>
+                        </div>
                       </div>
                       <div>
-                        <h3 className="font-bold text-sm text-white">Sports Browser</h3>
-                        <div className="text-xs text-gray-400">Navigate & Explore</div>
+                        <h3 className="font-bold text-sm text-white text-left">Sports Browser</h3>
+                        <div className="text-xs text-gray-400 text-left">Navigate & Explore</div>
                       </div>
-                    </div>
+                    </button>
                   </div>
                 </div>
 
@@ -730,9 +750,18 @@ function MatchDetailPage() {
               // Collapsed Sidebar - Icons Only
               <div className="h-full" style={{ backgroundColor: '#f7f7f7' }}>
                 <div className="p-2" style={{ backgroundColor: '#003d02' }}>
-                  <div className="text-center">
-                    <span className="text-xl">🏆</span>
-                  </div>
+                  <button 
+                    className="w-full text-center hover:bg-gray-800 p-2 rounded transition-colors"
+                    onClick={() => setIsLeftSidebarOpen(!isLeftSidebarOpen)}
+                    title="Expand Sports Browser"
+                  >
+                    {/* Collapsed Hamburger Menu */}
+                    <div className="w-5 h-5 flex flex-col justify-center items-center space-y-1 mx-auto">
+                      <div className="w-4 h-0.5 bg-white transition-all duration-300"></div>
+                      <div className="w-4 h-0.5 bg-white transition-all duration-300"></div>
+                      <div className="w-4 h-0.5 bg-white transition-all duration-300"></div>
+                    </div>
+                  </button>
                 </div>
                 
                 <div className="p-1">
@@ -766,47 +795,54 @@ function MatchDetailPage() {
           
           {/* Main Content Area */}
           <div className="flex-1 w-full bg-gray-50">
-            {/* Match Header */}
+            {/* Compact Match Header */}
             <div className="bg-white border-b border-gray-200 w-full">
               <div className="p-4 lg:p-6">
-                <div className="flex flex-col lg:flex-row items-center justify-between mb-6 gap-4">
-                  <div className="flex flex-col sm:flex-row items-center gap-4 lg:gap-6 w-full lg:w-auto">
-                    <div className="text-center">
-                      <div className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-1">
-                        {fullMatchData?.t1?.name || selectedMatch?.data?.t1?.name || 'Team 1'}
-                      </div>
-                      <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-blue-600">
-                        {fullMatchData?.t1?.score ?? selectedMatch?.data?.t1?.score ?? 0}
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="flex items-center justify-center gap-3">
-                        <span className="text-lg">{selectedSport === 'soccer' ? '⚽' : selectedSport === 'basket' ? '🏀' : selectedSport === 'tennis' ? '🎾' : selectedSport === 'baseball' ? '⚾' : selectedSport === 'amfootball' ? '🏈' : selectedSport === 'hockey' ? '🏒' : selectedSport === 'volleyball' ? '🏐' : '🏆'}</span>
-                        <span className="text-sm font-medium text-gray-700">{formatSportName(selectedSport)}</span>
-                        {(fullMatchData?.time > 0 || selectedMatch?.data?.time > 0) && (
-                          <div className="flex items-center gap-2">
-                            <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
-                            <span className="text-red-500 font-bold text-sm">LIVE</span>
-                          </div>
-                        )}
-                        <div className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
-                          {formatTime(fullMatchData?.time ?? selectedMatch?.data?.time)}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-1">
-                        {fullMatchData?.t2?.name || selectedMatch?.data?.t2?.name || 'Team 2'}
-                      </div>
-                      <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-blue-600">
-                        {fullMatchData?.t2?.score ?? selectedMatch?.data?.t2?.score ?? 0}
-                      </div>
-                    </div>
+                {/* Teams and Scores in one line */}
+                <div className="flex items-center justify-center gap-6 mb-4">
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg lg:text-xl font-bold text-gray-900">
+                      {fullMatchData?.t1?.name || selectedMatch?.data?.t1?.name || 'Team 1'}
+                    </span>
+                    <span className="text-2xl lg:text-3xl font-black text-blue-600">
+                      {fullMatchData?.t1?.score ?? selectedMatch?.data?.t1?.score ?? 0}
+                    </span>
                   </div>
                   
+                  <span className="text-xl lg:text-2xl font-bold text-gray-500">-</span>
                   
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl lg:text-3xl font-black text-blue-600">
+                      {fullMatchData?.t2?.score ?? selectedMatch?.data?.t2?.score ?? 0}
+                    </span>
+                    <span className="text-lg lg:text-xl font-bold text-gray-900">
+                      {fullMatchData?.t2?.name || selectedMatch?.data?.t2?.name || 'Team 2'}
+                    </span>
+                  </div>
                 </div>
-                
+
+                {/* Sport and Live indicator */}
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-sm">
+                    {selectedSport === 'soccer' ? '⚽' : 
+                     selectedSport === 'basket' ? '🏀' : 
+                     selectedSport === 'tennis' ? '🎾' : 
+                     selectedSport === 'baseball' ? '⚾' : 
+                     selectedSport === 'amfootball' ? '🏈' : 
+                     selectedSport === 'hockey' ? '🏒' : 
+                     selectedSport === 'volleyball' ? '🏐' : '🏆'}
+                  </span>
+                  <span className="text-sm font-medium text-gray-700 capitalize">
+                    {selectedSport}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                    <span className="text-red-500 font-bold text-sm">Live</span>
+                    <span className="text-sm font-bold text-gray-900">
+                      {formatTime(fullMatchData?.time ?? selectedMatch?.data?.time)}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 
