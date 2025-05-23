@@ -391,11 +391,17 @@ function App() {
           <div className="bg-gray-800 border-b border-gray-700">
             <div className="flex items-center justify-between px-6 py-3">
               <nav className="flex items-center gap-1">
-                <button className="bg-blue-600 text-white px-4 py-2 text-sm font-bold rounded-lg">
+                <button 
+                  className="bg-blue-600 text-white px-4 py-2 text-sm font-bold rounded-lg"
+                  onClick={() => navigate('/')}
+                >
                   Sports
                 </button>
-                <button className="text-gray-400 hover:text-white hover:bg-gray-700 px-4 py-2 text-sm font-medium rounded-lg transition-colors">
-                  In-Play
+                <button 
+                  className="text-gray-400 hover:text-white hover:bg-gray-700 px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+                  onClick={() => navigate('/pregame')}
+                >
+                  Pregame
                 </button>
                 <button className="text-gray-400 hover:text-white hover:bg-gray-700 px-4 py-2 text-sm font-medium rounded-lg transition-colors">
                   Casino

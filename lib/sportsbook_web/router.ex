@@ -20,7 +20,9 @@ defmodule SportsbookWeb.Router do
     # Homepage serves React app
     get "/", PageController, :react_app
     
-    # React Router catch-all (must be last)
+    # React Router catch-all routes
+    get "/pregame", PageController, :react_app
+    get "/pregame/*path", PageController, :react_app
     get "/match/*path", PageController, :react_app
     
     # Event routes
@@ -44,6 +46,8 @@ defmodule SportsbookWeb.Router do
     # Admin tools
     live "/admin/tables", AdminLive.Tables, :index
     live "/admin/tables/:table", AdminLive.Tables, :index
+    live "/admin/pregame-tables", AdminLive.PregameTables, :index
+    live "/admin/pregame-tables/:sport", AdminLive.PregameTables, :index
   end
 
   # API routes for React frontend
@@ -55,6 +59,11 @@ defmodule SportsbookWeb.Router do
     get "/matches/:sport", ApiController, :matches
     get "/market-name/:sport/:market_id", ApiController, :market_name
     get "/markets/:sport", ApiController, :markets
+    
+    # Pregame API routes
+    get "/pregame/sports/:sport", PregameController, :sports
+    get "/pregame/matches", PregameController, :matches
+    get "/pregame/match/:sport/:match_id", PregameController, :match_details
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

@@ -21,6 +21,8 @@ defmodule Sportsbook.Application do
       Sportsbook.API.TokenClient,
       # Start the websocket clients for different sports
       {Sportsbook.API.WebsocketSupervisor, []},
+      # Start the pregame system
+      {Sportsbook.Pregame.Supervisor, []},
       # Start a worker by calling: Sportsbook.Worker.start_link(arg)
       # {Sportsbook.Worker, arg},
       # Start to serve requests, typically the last entry
