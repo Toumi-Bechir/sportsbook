@@ -21,6 +21,25 @@ function MatchDetailPageNew() {
   // Ball trail tracking
   const [ballTrail, setBallTrail] = useState([]);
   
+  // Get sport-specific ball image
+  const getSportBallImage = (sport) => {
+    const ballImages = {
+      soccer: '/images/soccer.svg',
+      football: '/images/football.svg', 
+      basketball: '/images/basketball.svg',
+      tennis: '/images/tennis.svg',
+      baseball: '/images/baseball.svg',
+      hockey: '/images/hockey.svg',
+      volleyball: '/images/volleyball.svg',
+      handball: '/images/handball.svg',
+      rugby: '/images/rugby.svg',
+      rugbyleague: '/images/rugbyleague.svg',
+      table_tennis: '/images/table_tennis.svg',
+      cricket: '/images/cricket.svg'
+    };
+    return ballImages[sport] || '/images/soccer.svg'; // default to soccer ball
+  };
+  
   // Dictionaries
   const [marketDictionaries, setMarketDictionaries] = useState({});
   const [matchEventsDictionaries, setMatchEventsDictionaries] = useState({});
@@ -158,20 +177,48 @@ function MatchDetailPageNew() {
       const newData = payload.data;
       setFullMatchData(newData);
       
+      // Debug logging
+      console.log('🏀 Received match data:', {
+        hasXY: !!newData?.xy,
+        xy: newData?.xy,
+        hasBigData: !!newData?.big_data,
+        bigDataXY: newData?.big_data?.xy,
+        matchId: matchId,
+        sport: selectedSport,
+        fullDataKeys: Object.keys(newData || {})
+      });
+      
       // Track ball position for trail effect
-      if (newData?.xy) {
-        const coords = newData.xy.split(',');
+      // Check both xy field directly and in big_data
+      let xyCoords = newData?.xy || newData?.big_data?.xy;
+      
+      // For testing: simulate ball movement if no real coordinates
+      if (!xyCoords && selectedSport === 'soccer') {
+        const time = Date.now() / 3000; // Slow movement
+        const x = (Math.sin(time) + 1) / 2; // 0-1 range
+        const y = (Math.cos(time * 0.7) + 1) / 2; // 0-1 range
+        xyCoords = `${x.toFixed(3)},${y.toFixed(3)}`;
+        console.log(`🏀 Using simulated coordinates: ${xyCoords}`);
+      }
+      
+      if (xyCoords) {
+        const coords = xyCoords.split(',');
         if (coords.length === 2) {
           const x = parseFloat(coords[0]);
           const y = parseFloat(coords[1]);
+          
+          console.log(`🏀 Ball position update: x=${x}, y=${y} (from ${newData?.xy ? 'xy' : newData?.big_data?.xy ? 'big_data.xy' : 'simulated'})`);
           
           setBallTrail(prevTrail => {
             const newTrail = [...prevTrail, { x, y, timestamp: Date.now() }];
             // Keep only last 8 positions and remove old ones (older than 10 seconds)
             const cutoffTime = Date.now() - 10000;
-            return newTrail
+            const filteredTrail = newTrail
               .filter(pos => pos.timestamp > cutoffTime)
               .slice(-8);
+            
+            console.log(`🏀 Ball trail updated: ${filteredTrail.length} positions`);
+            return filteredTrail;
           });
         }
       }
@@ -1138,21 +1185,30 @@ function MatchDetailPageNew() {
                                 stroke="#00ff88"
                                 strokeWidth="3"
                                 opacity={opacity}
-                                strokeDasharray="3,2"
                               />
                             );
                           })}
                         </g>
                       )}
 
-                      {/* Ball Position - using real xy coordinates from big_data */}
+                      {/* Ball Position - using real xy coordinates from xy or big_data */}
                       {(() => {
-                        // Parse xy coordinates from big_data
+                        // Parse xy coordinates from xy field or big_data
                         let ballX = 295; // default position
                         let ballY = 120;
                         
-                        if (fullMatchData?.xy) {
-                          const coords = fullMatchData.xy.split(',');
+                        let xyCoords = fullMatchData?.xy || fullMatchData?.big_data?.xy;
+                        
+                        // For testing: simulate ball movement if no real coordinates
+                        if (!xyCoords && selectedSport === 'soccer') {
+                          const time = Date.now() / 3000; // Slow movement
+                          const x = (Math.sin(time) + 1) / 2; // 0-1 range
+                          const y = (Math.cos(time * 0.7) + 1) / 2; // 0-1 range
+                          xyCoords = `${x.toFixed(3)},${y.toFixed(3)}`;
+                        }
+                        
+                        if (xyCoords) {
+                          const coords = xyCoords.split(',');
                           if (coords.length === 2) {
                             const x = parseFloat(coords[0]); // 0-1 range
                             const y = parseFloat(coords[1]); // 0-1 range
@@ -1167,23 +1223,27 @@ function MatchDetailPageNew() {
                         return (
                           <g transform={`translate(${ballX}, ${ballY})`}>
                             {/* Ball shadow */}
-                            <ellipse cx="1" cy="8" rx="4" ry="2" fill="#000000" fillOpacity="0.3"/>
+                            <ellipse cx="1" cy="8" rx="6" ry="3" fill="#000000" fillOpacity="0.3"/>
                             
-                            {/* Ball */}
-                            <circle 
-                              cx="0" 
-                              cy="0" 
-                              r="5" 
-                              fill="#ffffff" 
-                              stroke="#000000" 
-                              strokeWidth="1"
-                              filter="url(#ballShadowMobile)"
-                            >
-                              <animate attributeName="cy" values="0;-2;0" dur="0.8s" repeatCount="indefinite"/>
-                            </circle>
-                            
-                            {/* Ball pattern */}
-                            <path d="M-3,-2 L3,-2 M-2,-4 L2,0 M-2,4 L2,0" stroke="#000000" strokeWidth="0.5" fill="none"/>
+                            {/* Sport-specific ball */}
+                            <g>
+                              <image 
+                                href={getSportBallImage(selectedSport)}
+                                x="-8" 
+                                y="-8" 
+                                width="16" 
+                                height="16"
+                                filter="url(#ballShadowMobile)"
+                              >
+                                <animateTransform 
+                                  attributeName="transform" 
+                                  type="translate" 
+                                  values="0,0; 0,-3; 0,0" 
+                                  dur="0.8s" 
+                                  repeatCount="indefinite"
+                                />
+                              </image>
+                            </g>
                           </g>
                         );
                       })()}
@@ -1554,21 +1614,30 @@ function MatchDetailPageNew() {
                                 stroke="#00ff88"
                                 strokeWidth="3"
                                 opacity={opacity}
-                                strokeDasharray="3,2"
                               />
                             );
                           })}
                         </g>
                       )}
 
-                      {/* Ball Position - using real xy coordinates from big_data */}
+                      {/* Ball Position - using real xy coordinates from xy or big_data */}
                       {(() => {
-                        // Parse xy coordinates from big_data
+                        // Parse xy coordinates from xy field or big_data
                         let ballX = 295; // default position
                         let ballY = 120;
                         
-                        if (fullMatchData?.xy) {
-                          const coords = fullMatchData.xy.split(',');
+                        let xyCoords = fullMatchData?.xy || fullMatchData?.big_data?.xy;
+                        
+                        // For testing: simulate ball movement if no real coordinates
+                        if (!xyCoords && selectedSport === 'soccer') {
+                          const time = Date.now() / 3000; // Slow movement
+                          const x = (Math.sin(time) + 1) / 2; // 0-1 range
+                          const y = (Math.cos(time * 0.7) + 1) / 2; // 0-1 range
+                          xyCoords = `${x.toFixed(3)},${y.toFixed(3)}`;
+                        }
+                        
+                        if (xyCoords) {
+                          const coords = xyCoords.split(',');
                           if (coords.length === 2) {
                             const x = parseFloat(coords[0]); // 0-1 range
                             const y = parseFloat(coords[1]); // 0-1 range
@@ -1583,23 +1652,27 @@ function MatchDetailPageNew() {
                         return (
                           <g transform={`translate(${ballX}, ${ballY})`}>
                             {/* Ball shadow */}
-                            <ellipse cx="1" cy="8" rx="4" ry="2" fill="#000000" fillOpacity="0.3"/>
+                            <ellipse cx="1" cy="8" rx="6" ry="3" fill="#000000" fillOpacity="0.3"/>
                             
-                            {/* Ball */}
-                            <circle 
-                              cx="0" 
-                              cy="0" 
-                              r="5" 
-                              fill="#ffffff" 
-                              stroke="#000000" 
-                              strokeWidth="1"
-                              filter="url(#ballShadow)"
-                            >
-                              <animate attributeName="cy" values="0;-2;0" dur="0.8s" repeatCount="indefinite"/>
-                            </circle>
-                            
-                            {/* Ball pattern */}
-                            <path d="M-3,-2 L3,-2 M-2,-4 L2,0 M-2,4 L2,0" stroke="#000000" strokeWidth="0.5" fill="none"/>
+                            {/* Sport-specific ball */}
+                            <g>
+                              <image 
+                                href={getSportBallImage(selectedSport)}
+                                x="-8" 
+                                y="-8" 
+                                width="16" 
+                                height="16"
+                                filter="url(#ballShadow)"
+                              >
+                                <animateTransform 
+                                  attributeName="transform" 
+                                  type="translate" 
+                                  values="0,0; 0,-3; 0,0" 
+                                  dur="0.8s" 
+                                  repeatCount="indefinite"
+                                />
+                              </image>
+                            </g>
                           </g>
                         );
                       })()}
